@@ -45,7 +45,22 @@ app.use(limiter);
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || 'https://weddingwisebooking.netlify.app/login',
+    origin: (origin, callback) => {
+        const allowedOrigins = [
+            'https://weddingwisebooking.netlify.app',
+            'https://master--weddingwisebooking.netlify.app',
+            'http://localhost:5173'
+        ];
+
+        // Allow requests with no origin, like mobile apps or curl requests
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
     credentials: true,
