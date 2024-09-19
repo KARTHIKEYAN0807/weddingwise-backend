@@ -45,7 +45,7 @@ app.use(limiter);
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || 'https://weddingwisebooking.netlify.app',
+    origin: process.env.FRONTEND_URL || 'https://weddingwisebooking.netlify.app/login',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
     credentials: true,
