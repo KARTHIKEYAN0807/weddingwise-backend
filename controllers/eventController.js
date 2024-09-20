@@ -37,20 +37,16 @@ exports.getEventById = async (req, res) => {
 // Book an event using the event ID
 exports.bookEvent = async (req, res) => {
     try {
-        console.log('Request body:', req.body); // Log incoming request body for debugging
-
         const { eventId, name, email, guests } = req.body;
 
         // Validate input fields
         if (!eventId || !name || !email || !guests) {
-            console.log('Missing fields:', { eventId, name, email, guests });
-            return res.status(400).json({ msg: 'Please provide all required fields: eventId, name, email, and guests.' });
+            return res.status(400).json({ msg: 'All fields are required: eventId, name, email, and guests.' });
         }
 
         // Ensure guests is a valid number
         const parsedGuests = parseInt(guests, 10);
         if (isNaN(parsedGuests) || parsedGuests <= 0) {
-            console.log('Invalid guests number:', guests);
             return res.status(400).json({ msg: 'Guests must be a valid positive number.' });
         }
 
@@ -62,7 +58,6 @@ exports.bookEvent = async (req, res) => {
         // Find the event by ID
         const event = await Event.findById(eventId);
         if (!event) {
-            console.log('Event not found:', eventId);
             return res.status(404).json({ msg: 'Event not found' });
         }
 
@@ -73,11 +68,10 @@ exports.bookEvent = async (req, res) => {
             name,
             email,
             guests: parsedGuests,
-            eventTitle: event.title, // Store the event title from the found event
+            eventTitle: event.title,
         });
 
         const savedEventBooking = await newEventBooking.save();
-        console.log('Booking saved:', savedEventBooking); // Log saved booking
         res.status(201).json(savedEventBooking);
     } catch (err) {
         console.error('Error booking event:', err.message || err);
