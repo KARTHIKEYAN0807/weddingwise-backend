@@ -37,15 +37,20 @@ exports.getEventById = async (req, res) => {
 // Book an event
 exports.bookEvent = async (req, res) => {
     try {
-        const { eventName, name, email, guests, date } = req.body;
+        const { eventId, name, email, guests, date } = req.body;
 
         // Validate input
-        if (!eventName || !name || !email || !guests || !date) {
-            return res.status(400).json({ msg: 'Please provide all required fields: eventName, name, email, guests, and date.' });
+        if (!eventId || !name || !email || !guests || !date) {
+            return res.status(400).json({ msg: 'Please provide all required fields: eventId, name, email, guests, and date.' });
         }
 
-        // Find the event by name (assuming eventName is a unique identifier)
-        const event = await Event.findOne({ title: eventName });
+        // Validate the event ID format
+        if (!mongoose.Types.ObjectId.isValid(eventId)) {
+            return res.status(400).json({ msg: 'Invalid event ID format' });
+        }
+
+        // Find the event by ID
+        const event = await Event.findById(eventId);
         if (!event) {
             return res.status(404).json({ msg: 'Event not found' });
         }
@@ -96,17 +101,22 @@ exports.deleteEventBooking = async (req, res) => {
 exports.updateEventBooking = async (req, res) => {
     try {
         const eventBookingId = req.params.id;
-        const { name, email, date, eventName, guests } = req.body;
+        const { name, email, date, eventTitle, guests } = req.body;
 
         // Validate the eventBookingId
         if (!mongoose.Types.ObjectId.isValid(eventBookingId)) {
             return res.status(400).json({ msg: 'Invalid event booking ID format' });
         }
 
+        // Validate required fields
+        if (!eventTitle || !name || !email || !date || !guests) {
+            return res.status(400).json({ msg: 'Please provide all required fields: eventTitle, name, email, date, and guests.' });
+        }
+
         // Find and update the event booking using the Booking model
         const updatedBooking = await Booking.findByIdAndUpdate(
             eventBookingId,
-            { name, email, date, eventTitle: eventName, guests },
+            { name, email, date, eventTitle, guests },
             { new: true, runValidators: true }
         );
 
@@ -152,9 +162,9 @@ exports.updateEvent = async (req, res) => {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
 
-        const event = await Event.findById(eventId);
-        if (!event) {
-            return res.status(404).json({ msg: 'Event not found' });
+        // Validate required fields
+        if (!title) {
+            return res.status(400).json({ msg: 'Event title is required' });
         }
 
         // Update the event
@@ -163,6 +173,11 @@ exports.updateEvent = async (req, res) => {
             { title, description, img },
             { new: true, runValidators: true }
         );
+
+        if (!updatedEvent) {
+            return res.status(404).json({ msg: 'Event not found' });
+        }
+
         res.json(updatedEvent);
     } catch (err) {
         console.error('Error updating event:', err);
