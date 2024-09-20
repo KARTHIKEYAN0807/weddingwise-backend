@@ -44,11 +44,11 @@ exports.getEventById = async (req, res) => {
 // Book an event using the event ID
 exports.bookEvent = async (req, res) => {
     try {
-        const { eventId, name, email, guests } = req.body;
+        const { eventId, name, email, guests, eventTitle } = req.body;
 
         // Validate input fields
-        if (!eventId || !name || !email || !guests) {
-            return res.status(400).json({ msg: 'All fields are required: eventId, name, email, and guests.' });
+        if (!eventId || !name || !email || !guests || !eventTitle) {
+            return res.status(400).json({ msg: 'All fields are required: eventId, eventTitle, name, email, and guests.' });
         }
 
         // Ensure guests is a valid number
