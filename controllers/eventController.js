@@ -1,4 +1,3 @@
-// controllers/eventController.js
 const mongoose = require('mongoose');
 const Event = require('../models/Event');
 const Booking = require('../models/Booking');
@@ -19,7 +18,6 @@ exports.getEventById = async (req, res) => {
     try {
         const eventId = req.params.id;
 
-        // Validate the format of the ObjectId
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
@@ -40,18 +38,15 @@ exports.bookEvent = async (req, res) => {
     try {
         const { eventTitle, name, email, guests } = req.body;
 
-        // Validate input
         if (!eventTitle || !name || !email || !guests) {
             return res.status(400).json({ msg: 'Please provide all required fields: eventTitle, name, email, and guests.' });
         }
 
-        // Find the event by title (assuming eventTitle is a unique identifier)
         const event = await Event.findOne({ title: eventTitle });
         if (!event) {
             return res.status(404).json({ msg: 'Event not found' });
         }
 
-        // Create a new booking using the Booking model
         const newEventBooking = new Booking({
             bookingType: 'Event',
             event: event._id,
@@ -64,7 +59,7 @@ exports.bookEvent = async (req, res) => {
         const savedEventBooking = await newEventBooking.save();
         res.status(201).json(savedEventBooking);
     } catch (err) {
-        console.error('Error booking event:', err);
+        console.error('Error booking event:', err.message || err);
         res.status(500).json({ msg: 'Server error while booking event' });
     }
 };
@@ -74,17 +69,15 @@ exports.createEvent = async (req, res) => {
     try {
         const { title, description, img } = req.body;
 
-        // Ensure title is present
         if (!title) {
             return res.status(400).json({ msg: 'Event title is required' });
         }
 
-        // Create new event
         const newEvent = new Event({ title, description, img });
         const savedEvent = await newEvent.save();
         res.status(201).json(savedEvent);
     } catch (err) {
-        console.error('Error creating event:', err);
+        console.error('Error creating event:', err.message || err);
         res.status(500).json({ msg: 'Server error while creating event' });
     }
 };
@@ -95,7 +88,10 @@ exports.updateEvent = async (req, res) => {
         const eventId = req.params.id;
         const { title, description, img } = req.body;
 
-        // Validate the format of the ObjectId
+        if (!title) {
+            return res.status(400).json({ msg: 'Event title is required' });
+        }
+
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
@@ -105,15 +101,19 @@ exports.updateEvent = async (req, res) => {
             return res.status(404).json({ msg: 'Event not found' });
         }
 
-        // Update the event
         const updatedEvent = await Event.findByIdAndUpdate(
             eventId,
             { title, description, img },
             { new: true, runValidators: true }
         );
+
+        if (!updatedEvent) {
+            return res.status(500).json({ msg: 'Failed to update the event.' });
+        }
+
         res.json(updatedEvent);
     } catch (err) {
-        console.error('Error updating event:', err);
+        console.error('Error updating event:', err.message || err);
         res.status(500).json({ msg: 'Server error while updating event' });
     }
 };
@@ -123,7 +123,6 @@ exports.deleteEvent = async (req, res) => {
     try {
         const eventId = req.params.id;
 
-        // Validate the eventId
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
@@ -136,7 +135,7 @@ exports.deleteEvent = async (req, res) => {
         await Event.findByIdAndDelete(eventId);
         res.json({ msg: 'Event deleted' });
     } catch (err) {
-        console.error('Error deleting event:', err);
+        console.error('Error deleting event:', err.message || err);
         res.status(500).json({ msg: 'Server error while deleting event' });
     }
 };
