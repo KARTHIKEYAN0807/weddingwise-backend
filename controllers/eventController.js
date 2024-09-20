@@ -41,7 +41,7 @@ exports.getEventById = async (req, res) => {
     }
 };
 
-// Book an event using the event ID
+// Book an event using the event ID and body
 exports.bookEvent = async (req, res) => {
     try {
         const { eventId, name, email, guests, eventTitle } = req.body;

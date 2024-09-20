@@ -14,10 +14,10 @@ router.post('/', eventController.createEvent);
 // Book an event by passing the event ID in the URL
 router.post('/book/:id', eventController.bookEvent);
 
-// Update an event
+// Update an event by passing the event ID
 router.put('/:id', eventController.updateEvent);
 
-// Delete an event
+// Delete an event by passing the event ID
 router.delete('/:id', eventController.deleteEvent);
 
 module.exports = router;
