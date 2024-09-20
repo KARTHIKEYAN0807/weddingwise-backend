@@ -6,7 +6,7 @@ const Booking = require('../models/Booking'); // Use the Booking model
 exports.getAllEvents = async (req, res) => {
     try {
         const events = await Event.find();
-        res.json(events);
+        res.status(200).json(events);
     } catch (err) {
         console.error('Error fetching events:', err);
         res.status(500).json({ msg: 'Server error while fetching events' });
@@ -27,7 +27,7 @@ exports.getEventById = async (req, res) => {
         if (!event) {
             return res.status(404).json({ msg: 'Event not found' });
         }
-        res.json(event);
+        res.status(200).json(event);
     } catch (err) {
         console.error('Error fetching event:', err);
         res.status(500).json({ msg: 'Server error while fetching event' });
@@ -62,7 +62,7 @@ exports.bookEvent = async (req, res) => {
             name,
             email,
             guests,
-            eventTitle: event.title,
+            eventTitle: event.title, // Assigning event title
             date
         });
 
@@ -90,7 +90,7 @@ exports.deleteEventBooking = async (req, res) => {
         }
 
         await Booking.findByIdAndDelete(eventBookingId);
-        res.json({ msg: 'Event booking deleted' });
+        res.status(200).json({ msg: 'Event booking deleted successfully' });
     } catch (err) {
         console.error('Error deleting event booking:', err);
         res.status(500).json({ msg: 'Server error while deleting event booking' });
@@ -113,7 +113,7 @@ exports.updateEventBooking = async (req, res) => {
             return res.status(400).json({ msg: 'Please provide all required fields: eventTitle, name, email, date, and guests.' });
         }
 
-        // Find and update the event booking using the Booking model
+        // Update the event booking using the Booking model
         const updatedBooking = await Booking.findByIdAndUpdate(
             eventBookingId,
             { name, email, date, eventTitle, guests },
@@ -124,7 +124,7 @@ exports.updateEventBooking = async (req, res) => {
             return res.status(404).json({ msg: 'Event booking not found' });
         }
 
-        res.json(updatedBooking);
+        res.status(200).json(updatedBooking);
     } catch (err) {
         console.error('Error updating event booking:', err);
         res.status(500).json({ msg: 'Server error while updating event booking' });
@@ -178,7 +178,7 @@ exports.updateEvent = async (req, res) => {
             return res.status(404).json({ msg: 'Event not found' });
         }
 
-        res.json(updatedEvent);
+        res.status(200).json(updatedEvent);
     } catch (err) {
         console.error('Error updating event:', err);
         res.status(500).json({ msg: 'Server error while updating event' });
@@ -201,7 +201,7 @@ exports.deleteEvent = async (req, res) => {
         }
 
         await Event.findByIdAndDelete(eventId);
-        res.json({ msg: 'Event deleted' });
+        res.status(200).json({ msg: 'Event deleted successfully' });
     } catch (err) {
         console.error('Error deleting event:', err);
         res.status(500).json({ msg: 'Server error while deleting event' });
