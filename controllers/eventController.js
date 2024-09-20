@@ -95,6 +95,9 @@ exports.updateEvent = async (req, res) => {
         const eventId = req.params.id;
         const { title, description, img } = req.body;
 
+        // Log incoming request body for debugging
+        console.log('Update Event Request Body:', req.body);
+
         // Validate the format of the ObjectId
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
@@ -103,6 +106,11 @@ exports.updateEvent = async (req, res) => {
         const event = await Event.findById(eventId);
         if (!event) {
             return res.status(404).json({ msg: 'Event not found' });
+        }
+
+        // Ensure title is not empty
+        if (!title) {
+            return res.status(400).json({ msg: 'Event title is required' });
         }
 
         // Update the event
