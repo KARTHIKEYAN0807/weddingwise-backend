@@ -1,4 +1,3 @@
-// routes/eventRoutes.js
 const express = require('express');
 const router = express.Router();
 const eventController = require('../controllers/eventController');
@@ -12,8 +11,8 @@ router.get('/:id', eventController.getEventById);
 // Create a new event
 router.post('/', eventController.createEvent);
 
-// Book an event
-router.post('/book', eventController.bookEvent);
+// Book an event by passing the event ID in the URL
+router.post('/book/:id', eventController.bookEvent);
 
 // Update an event
 router.put('/:id', eventController.updateEvent);

@@ -53,18 +53,19 @@ async function seedEvents() {
     console.log('Connected to MongoDB');
 
     // Clear the existing events
-    await Event.deleteMany();
-    console.log('Existing events cleared');
+    const deleted = await Event.deleteMany();
+    console.log(`Deleted ${deleted.deletedCount} existing events`);
 
     // Insert new events
-    await Event.insertMany(events);
-    console.log('Events seeded successfully');
-    
-    // Close the connection
-    mongoose.connection.close();
+    const inserted = await Event.insertMany(events);
+    console.log(`${inserted.length} events seeded successfully`);
+
   } catch (err) {
     console.error('Error seeding events:', err);
+  } finally {
+    // Ensure mongoose connection is closed
     mongoose.connection.close();
+    console.log('Database connection closed');
   }
 }
 

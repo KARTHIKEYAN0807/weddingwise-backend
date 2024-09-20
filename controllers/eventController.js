@@ -2,13 +2,22 @@ const mongoose = require('mongoose');
 const Event = require('../models/Event');
 const Booking = require('../models/Booking');
 
+// Helper to validate ObjectId
+const validateObjectId = (id, res) => {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        res.status(400).json({ msg: 'Invalid ID format' });
+        return false;
+    }
+    return true;
+};
+
 // Get all events
 exports.getAllEvents = async (req, res) => {
     try {
         const events = await Event.find();
         res.status(200).json(events);
     } catch (err) {
-        console.error('Error fetching events:', err);
+        console.error('Error fetching events:', err.message || err);
         res.status(500).json({ msg: 'Server error while fetching events' });
     }
 };
@@ -19,9 +28,7 @@ exports.getEventById = async (req, res) => {
         const eventId = req.params.id;
 
         // Validate the event ID format
-        if (!mongoose.Types.ObjectId.isValid(eventId)) {
-            return res.status(400).json({ msg: 'Invalid event ID format' });
-        }
+        if (!validateObjectId(eventId, res)) return;
 
         const event = await Event.findById(eventId);
         if (!event) {
@@ -29,7 +36,7 @@ exports.getEventById = async (req, res) => {
         }
         res.status(200).json(event);
     } catch (err) {
-        console.error('Error fetching event:', err);
+        console.error('Error fetching event:', err.message || err);
         res.status(500).json({ msg: 'Server error while fetching event' });
     }
 };
@@ -51,9 +58,7 @@ exports.bookEvent = async (req, res) => {
         }
 
         // Validate event ID format
-        if (!mongoose.Types.ObjectId.isValid(eventId)) {
-            return res.status(400).json({ msg: 'Invalid event ID format' });
-        }
+        if (!validateObjectId(eventId, res)) return;
 
         // Find the event by ID
         const event = await Event.findById(eventId);
@@ -110,9 +115,7 @@ exports.updateEvent = async (req, res) => {
         }
 
         // Validate the event ID format
-        if (!mongoose.Types.ObjectId.isValid(eventId)) {
-            return res.status(400).json({ msg: 'Invalid event ID format' });
-        }
+        if (!validateObjectId(eventId, res)) return;
 
         const updatedEvent = await Event.findByIdAndUpdate(
             eventId,
@@ -137,9 +140,7 @@ exports.deleteEvent = async (req, res) => {
         const eventId = req.params.id;
 
         // Validate the event ID format
-        if (!mongoose.Types.ObjectId.isValid(eventId)) {
-            return res.status(400).json({ msg: 'Invalid event ID format' });
-        }
+        if (!validateObjectId(eventId, res)) return;
 
         const event = await Event.findById(eventId);
         if (!event) {

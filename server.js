@@ -2,15 +2,16 @@ require('dotenv').config(); // Ensure this is at the very top
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const helmet = require('helmet'); 
-const rateLimit = require('express-rate-limit'); 
-const morgan = require('morgan'); 
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const morgan = require('morgan');
 const nodemailer = require('nodemailer'); // Import Nodemailer
 const userRoutes = require('./routes/userRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const authRoutes = require('./routes/authRoutes'); // Import the authRoutes
+const { body, validationResult } = require('express-validator'); // Import for validation
 
 const app = express();
 
@@ -35,10 +36,10 @@ if (process.env.NODE_ENV === 'development') {
 // Security middleware
 app.use(helmet());
 
-// Rate limiting middleware
+// Rate limiting middleware (global)
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, 
-    max: 100, 
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
     message: 'Too many requests from this IP, please try again after 15 minutes',
 });
 app.use(limiter);
@@ -89,34 +90,54 @@ app.use('/api/vendors', vendorRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/auth', authRoutes);
 
-// Contact form route to handle sending emails
-app.post('/api/contact', async (req, res) => {
-    const { name, email, message } = req.body;
-
-    // Configure Nodemailer transporter
-    let transporter = nodemailer.createTransport({
-        service: 'gmail', // or any email provider
-        auth: {
-            user: process.env.EMAIL_USER, // your email
-            pass: process.env.EMAIL_PASS, // your email password
-        },
-    });
-
-    let mailOptions = {
-        from: email, // sender address (user's email)
-        to: process.env.EMAIL_USER, // receiving address (your email)
-        subject: `Contact Form Submission from ${name}`,
-        text: `You have received a new message from your contact form:\n\nName: ${name}\nEmail: ${email}\nMessage:\n${message}`,
-    };
-
-    try {
-        await transporter.sendMail(mailOptions);
-        res.status(200).send({ msg: 'Your message has been sent successfully!' });
-    } catch (error) {
-        console.error('Error sending contact form email:', error);
-        res.status(500).send({ msg: 'Failed to send message.' });
-    }
+// Rate limiting specifically for contact form to avoid spam
+const contactLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, // Limit each IP to 5 contact form requests per hour
+    message: 'Too many contact form submissions from this IP, please try again after an hour',
 });
+
+// Contact form route to handle sending emails
+app.post(
+    '/api/contact',
+    contactLimiter, // Apply rate limiting to the contact form
+    [
+        body('email').isEmail().withMessage('Please enter a valid email address'), // Email validation
+        body('message').notEmpty().withMessage('Message field cannot be empty'), // Message validation
+    ],
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        const { name, email, message } = req.body;
+
+        // Configure Nodemailer transporter
+        let transporter = nodemailer.createTransport({
+            service: 'gmail', // or any email provider
+            auth: {
+                user: process.env.EMAIL_USER, // your email
+                pass: process.env.EMAIL_PASS, // your email password
+            },
+        });
+
+        let mailOptions = {
+            from: email, // sender address (user's email)
+            to: process.env.EMAIL_USER, // receiving address (your email)
+            subject: `Contact Form Submission from ${name}`,
+            text: `You have received a new message from your contact form:\n\nName: ${name}\nEmail: ${email}\nMessage:\n${message}`,
+        };
+
+        try {
+            await transporter.sendMail(mailOptions);
+            res.status(200).send({ msg: 'Your message has been sent successfully!' });
+        } catch (error) {
+            console.error('Error sending contact form email:', error);
+            res.status(500).send({ msg: 'Failed to send message.' });
+        }
+    }
+);
 
 // Default route
 app.get('/', (req, res) => {
