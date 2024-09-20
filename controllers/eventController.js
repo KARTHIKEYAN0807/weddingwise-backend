@@ -6,7 +6,7 @@ const Booking = require('../models/Booking');
 exports.getAllEvents = async (req, res) => {
     try {
         const events = await Event.find();
-        res.json(events);
+        res.status(200).json(events);
     } catch (err) {
         console.error('Error fetching events:', err);
         res.status(500).json({ msg: 'Server error while fetching events' });
@@ -27,7 +27,7 @@ exports.getEventById = async (req, res) => {
         if (!event) {
             return res.status(404).json({ msg: 'Event not found' });
         }
-        res.json(event);
+        res.status(200).json(event);
     } catch (err) {
         console.error('Error fetching event:', err);
         res.status(500).json({ msg: 'Server error while fetching event' });
@@ -120,12 +120,6 @@ exports.updateEvent = async (req, res) => {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
 
-        const event = await Event.findById(eventId);
-        if (!event) {
-            return res.status(404).json({ msg: 'Event not found' });
-        }
-
-        // Update the event
         const updatedEvent = await Event.findByIdAndUpdate(
             eventId,
             { title, description, img },
@@ -133,10 +127,10 @@ exports.updateEvent = async (req, res) => {
         );
 
         if (!updatedEvent) {
-            return res.status(500).json({ msg: 'Failed to update the event.' });
+            return res.status(404).json({ msg: 'Event not found or failed to update.' });
         }
 
-        res.json(updatedEvent);
+        res.status(200).json(updatedEvent);
     } catch (err) {
         console.error('Error updating event:', err.message || err);
         res.status(500).json({ msg: 'Server error while updating event' });
@@ -159,7 +153,7 @@ exports.deleteEvent = async (req, res) => {
         }
 
         await Event.findByIdAndDelete(eventId);
-        res.json({ msg: 'Event deleted successfully' });
+        res.status(200).json({ msg: 'Event deleted successfully' });
     } catch (err) {
         console.error('Error deleting event:', err.message || err);
         res.status(500).json({ msg: 'Server error while deleting event' });
