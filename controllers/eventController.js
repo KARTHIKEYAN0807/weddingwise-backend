@@ -8,7 +8,7 @@ exports.getAllEvents = async (req, res) => {
         const events = await Event.find();
         res.json(events);
     } catch (err) {
-        console.error('Error fetching events:', err);
+        console.error('Error fetching events:', err.message || err);
         res.status(500).json({ msg: 'Server error while fetching events' });
     }
 };
@@ -18,6 +18,7 @@ exports.getEventById = async (req, res) => {
     try {
         const eventId = req.params.id;
 
+        // Validate the format of the ObjectId
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
@@ -26,9 +27,10 @@ exports.getEventById = async (req, res) => {
         if (!event) {
             return res.status(404).json({ msg: 'Event not found' });
         }
+
         res.json(event);
     } catch (err) {
-        console.error('Error fetching event:', err);
+        console.error('Error fetching event:', err.message || err);
         res.status(500).json({ msg: 'Server error while fetching event' });
     }
 };
@@ -38,15 +40,18 @@ exports.bookEvent = async (req, res) => {
     try {
         const { eventTitle, name, email, guests } = req.body;
 
+        // Validate input
         if (!eventTitle || !name || !email || !guests) {
             return res.status(400).json({ msg: 'Please provide all required fields: eventTitle, name, email, and guests.' });
         }
 
+        // Find the event by title
         const event = await Event.findOne({ title: eventTitle });
         if (!event) {
             return res.status(404).json({ msg: 'Event not found' });
         }
 
+        // Create a new booking
         const newEventBooking = new Booking({
             bookingType: 'Event',
             event: event._id,
@@ -67,13 +72,15 @@ exports.bookEvent = async (req, res) => {
 // Create a new event
 exports.createEvent = async (req, res) => {
     try {
-        const { title, description, img } = req.body;
+        const { title, description, img, date, location, price } = req.body;
 
+        // Ensure title is present
         if (!title) {
             return res.status(400).json({ msg: 'Event title is required' });
         }
 
-        const newEvent = new Event({ title, description, img });
+        // Create new event with additional fields
+        const newEvent = new Event({ title, description, img, date, location, price });
         const savedEvent = await newEvent.save();
         res.status(201).json(savedEvent);
     } catch (err) {
@@ -86,12 +93,14 @@ exports.createEvent = async (req, res) => {
 exports.updateEvent = async (req, res) => {
     try {
         const eventId = req.params.id;
-        const { title, description, img } = req.body;
+        const { title, description, img, date, location, price } = req.body;
 
+        // Ensure title is present
         if (!title) {
             return res.status(400).json({ msg: 'Event title is required' });
         }
 
+        // Validate the format of the ObjectId
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
@@ -101,9 +110,10 @@ exports.updateEvent = async (req, res) => {
             return res.status(404).json({ msg: 'Event not found' });
         }
 
+        // Update the event
         const updatedEvent = await Event.findByIdAndUpdate(
             eventId,
-            { title, description, img },
+            { title, description, img, date, location, price },
             { new: true, runValidators: true }
         );
 
@@ -123,6 +133,7 @@ exports.deleteEvent = async (req, res) => {
     try {
         const eventId = req.params.id;
 
+        // Validate the eventId
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
@@ -133,7 +144,7 @@ exports.deleteEvent = async (req, res) => {
         }
 
         await Event.findByIdAndDelete(eventId);
-        res.json({ msg: 'Event deleted' });
+        res.json({ msg: 'Event deleted successfully.' });
     } catch (err) {
         console.error('Error deleting event:', err.message || err);
         res.status(500).json({ msg: 'Server error while deleting event' });
