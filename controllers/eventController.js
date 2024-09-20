@@ -33,44 +33,45 @@ exports.getEventById = async (req, res) => {
     }
 };
 
-// Book an event
+// Book an event using the event ID
 exports.bookEvent = async (req, res) => {
     try {
-        console.log('Request body:', req.body); // Debug log to see the incoming request data
+        console.log('Request body:', req.body); // Log incoming request body for debugging
+        
+        const { eventId, name, email, guests } = req.body;
 
-        const { eventTitle, name, email, guests } = req.body;
-
-        // Check if all required fields are present
-        if (!eventTitle || !name || !email || !guests) {
-            console.log('Missing fields:', { eventTitle, name, email, guests }); // Debug log missing fields
-            return res.status(400).json({ msg: 'Please provide all required fields: eventTitle, name, email, and guests.' });
+        // Validate input fields
+        if (!eventId || !name || !email || !guests) {
+            console.log('Missing fields:', { eventId, name, email, guests });
+            return res.status(400).json({ msg: 'Please provide all required fields: eventId, name, email, and guests.' });
         }
 
-        // Ensure guests is a number
+        // Ensure guests is a valid number
         const parsedGuests = parseInt(guests, 10);
         if (isNaN(parsedGuests)) {
-            console.log('Invalid guests number:', guests); // Debug log for invalid guests number
+            console.log('Invalid guests number:', guests);
             return res.status(400).json({ msg: 'Guests must be a valid number.' });
         }
 
-        // Find the event by title
-        const event = await Event.findOne({ title: eventTitle });
+        // Find the event by ID
+        const event = await Event.findById(eventId);
         if (!event) {
-            console.log('Event not found:', eventTitle); // Debug log for event not found
+            console.log('Event not found:', eventId);
             return res.status(404).json({ msg: 'Event not found' });
         }
 
-        // Create a new booking using the Booking model
+        // Create a new booking
         const newEventBooking = new Booking({
             bookingType: 'Event',
             event: event._id,
             name,
             email,
             guests: parsedGuests,
-            eventTitle: event.title,
+            eventTitle: event.title, // Store the event title from the found event
         });
 
         const savedEventBooking = await newEventBooking.save();
+        console.log('Booking saved:', savedEventBooking); // Log saved booking
         res.status(201).json(savedEventBooking);
     } catch (err) {
         console.error('Error booking event:', err.message || err);
