@@ -18,6 +18,7 @@ exports.getEventById = async (req, res) => {
     try {
         const eventId = req.params.id;
 
+        // Validate the event ID format
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
@@ -37,7 +38,7 @@ exports.getEventById = async (req, res) => {
 exports.bookEvent = async (req, res) => {
     try {
         console.log('Request body:', req.body); // Log incoming request body for debugging
-        
+
         const { eventId, name, email, guests } = req.body;
 
         // Validate input fields
@@ -48,9 +49,14 @@ exports.bookEvent = async (req, res) => {
 
         // Ensure guests is a valid number
         const parsedGuests = parseInt(guests, 10);
-        if (isNaN(parsedGuests)) {
+        if (isNaN(parsedGuests) || parsedGuests <= 0) {
             console.log('Invalid guests number:', guests);
-            return res.status(400).json({ msg: 'Guests must be a valid number.' });
+            return res.status(400).json({ msg: 'Guests must be a valid positive number.' });
+        }
+
+        // Validate event ID format
+        if (!mongoose.Types.ObjectId.isValid(eventId)) {
+            return res.status(400).json({ msg: 'Invalid event ID format' });
         }
 
         // Find the event by ID
@@ -84,8 +90,9 @@ exports.createEvent = async (req, res) => {
     try {
         const { title, description, img } = req.body;
 
-        if (!title) {
-            return res.status(400).json({ msg: 'Event title is required' });
+        // Validate required fields
+        if (!title || !img) {
+            return res.status(400).json({ msg: 'Event title and image URL are required.' });
         }
 
         const newEvent = new Event({ title, description, img });
@@ -103,10 +110,12 @@ exports.updateEvent = async (req, res) => {
         const eventId = req.params.id;
         const { title, description, img } = req.body;
 
-        if (!title) {
-            return res.status(400).json({ msg: 'Event title is required' });
+        // Validate required fields
+        if (!title || !img) {
+            return res.status(400).json({ msg: 'Event title and image URL are required.' });
         }
 
+        // Validate the event ID format
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
@@ -116,6 +125,7 @@ exports.updateEvent = async (req, res) => {
             return res.status(404).json({ msg: 'Event not found' });
         }
 
+        // Update the event
         const updatedEvent = await Event.findByIdAndUpdate(
             eventId,
             { title, description, img },
@@ -138,6 +148,7 @@ exports.deleteEvent = async (req, res) => {
     try {
         const eventId = req.params.id;
 
+        // Validate the event ID format
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
@@ -148,7 +159,7 @@ exports.deleteEvent = async (req, res) => {
         }
 
         await Event.findByIdAndDelete(eventId);
-        res.json({ msg: 'Event deleted' });
+        res.json({ msg: 'Event deleted successfully' });
     } catch (err) {
         console.error('Error deleting event:', err.message || err);
         res.status(500).json({ msg: 'Server error while deleting event' });
