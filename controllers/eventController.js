@@ -8,7 +8,7 @@ exports.getAllEvents = async (req, res) => {
         const events = await Event.find();
         res.json(events);
     } catch (err) {
-        console.error('Error fetching events:', err.message || err);
+        console.error('Error fetching events:', err);
         res.status(500).json({ msg: 'Server error while fetching events' });
     }
 };
@@ -18,7 +18,6 @@ exports.getEventById = async (req, res) => {
     try {
         const eventId = req.params.id;
 
-        // Validate the format of the ObjectId
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
@@ -27,10 +26,9 @@ exports.getEventById = async (req, res) => {
         if (!event) {
             return res.status(404).json({ msg: 'Event not found' });
         }
-
         res.json(event);
     } catch (err) {
-        console.error('Error fetching event:', err.message || err);
+        console.error('Error fetching event:', err);
         res.status(500).json({ msg: 'Server error while fetching event' });
     }
 };
@@ -38,26 +36,37 @@ exports.getEventById = async (req, res) => {
 // Book an event
 exports.bookEvent = async (req, res) => {
     try {
+        console.log('Request body:', req.body); // Debug log to see the incoming request data
+
         const { eventTitle, name, email, guests } = req.body;
 
-        // Validate input
+        // Check if all required fields are present
         if (!eventTitle || !name || !email || !guests) {
+            console.log('Missing fields:', { eventTitle, name, email, guests }); // Debug log missing fields
             return res.status(400).json({ msg: 'Please provide all required fields: eventTitle, name, email, and guests.' });
+        }
+
+        // Ensure guests is a number
+        const parsedGuests = parseInt(guests, 10);
+        if (isNaN(parsedGuests)) {
+            console.log('Invalid guests number:', guests); // Debug log for invalid guests number
+            return res.status(400).json({ msg: 'Guests must be a valid number.' });
         }
 
         // Find the event by title
         const event = await Event.findOne({ title: eventTitle });
         if (!event) {
+            console.log('Event not found:', eventTitle); // Debug log for event not found
             return res.status(404).json({ msg: 'Event not found' });
         }
 
-        // Create a new booking
+        // Create a new booking using the Booking model
         const newEventBooking = new Booking({
             bookingType: 'Event',
             event: event._id,
             name,
             email,
-            guests,
+            guests: parsedGuests,
             eventTitle: event.title,
         });
 
@@ -72,15 +81,13 @@ exports.bookEvent = async (req, res) => {
 // Create a new event
 exports.createEvent = async (req, res) => {
     try {
-        const { title, description, img, date, location, price } = req.body;
+        const { title, description, img } = req.body;
 
-        // Ensure title is present
         if (!title) {
             return res.status(400).json({ msg: 'Event title is required' });
         }
 
-        // Create new event with additional fields
-        const newEvent = new Event({ title, description, img, date, location, price });
+        const newEvent = new Event({ title, description, img });
         const savedEvent = await newEvent.save();
         res.status(201).json(savedEvent);
     } catch (err) {
@@ -93,14 +100,12 @@ exports.createEvent = async (req, res) => {
 exports.updateEvent = async (req, res) => {
     try {
         const eventId = req.params.id;
-        const { title, description, img, date, location, price } = req.body;
+        const { title, description, img } = req.body;
 
-        // Ensure title is present
         if (!title) {
             return res.status(400).json({ msg: 'Event title is required' });
         }
 
-        // Validate the format of the ObjectId
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
@@ -110,10 +115,9 @@ exports.updateEvent = async (req, res) => {
             return res.status(404).json({ msg: 'Event not found' });
         }
 
-        // Update the event
         const updatedEvent = await Event.findByIdAndUpdate(
             eventId,
-            { title, description, img, date, location, price },
+            { title, description, img },
             { new: true, runValidators: true }
         );
 
@@ -133,7 +137,6 @@ exports.deleteEvent = async (req, res) => {
     try {
         const eventId = req.params.id;
 
-        // Validate the eventId
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
@@ -144,7 +147,7 @@ exports.deleteEvent = async (req, res) => {
         }
 
         await Event.findByIdAndDelete(eventId);
-        res.json({ msg: 'Event deleted successfully.' });
+        res.json({ msg: 'Event deleted' });
     } catch (err) {
         console.error('Error deleting event:', err.message || err);
         res.status(500).json({ msg: 'Server error while deleting event' });
