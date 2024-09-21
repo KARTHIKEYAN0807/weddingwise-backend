@@ -16,7 +16,7 @@ const BookingSchema = new mongoose.Schema({
         ref: 'Vendor',
         required: function() { return this.bookingType === 'Vendor'; }
     },
-    name: {
+    name: { // Changed from eventTitle to name
         type: String,
         required: true,
     },
@@ -27,10 +27,6 @@ const BookingSchema = new mongoose.Schema({
     guests: {
         type: Number,
         required: function() { return this.bookingType === 'Event'; },
-    },
-    eventTitle: {
-        type: String,
-        default: 'Untitled Event',
     },
     vendorName: {
         type: String,
@@ -44,8 +40,8 @@ const BookingSchema = new mongoose.Schema({
 
 // Pre-save hook to ensure default values and validation
 BookingSchema.pre('save', function(next) {
-    if (this.bookingType === 'Event' && !this.eventTitle) {
-        this.eventTitle = 'Untitled Event';
+    if (this.bookingType === 'Event' && !this.name) { // Changed from eventTitle to name
+        this.name = 'Untitled Event'; // Set default event name
     }
     next();
 });
