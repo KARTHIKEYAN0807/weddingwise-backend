@@ -16,7 +16,7 @@ const BookingSchema = new mongoose.Schema({
         ref: 'Vendor',
         required: function () { return this.bookingType === 'Vendor'; }
     },
-    name: { // 'name' is required for both events and vendors
+    name: { // Use 'name' for both events and vendors
         type: String,
         required: true,
     },
@@ -27,10 +27,6 @@ const BookingSchema = new mongoose.Schema({
     guests: {
         type: Number,
         required: function () { return this.bookingType === 'Event'; }, // Guests only required for events
-    },
-    vendorName: {
-        type: String,
-        required: function () { return this.bookingType === 'Vendor'; }, // VendorName only required for vendors
     },
     date: {
         type: Date,
