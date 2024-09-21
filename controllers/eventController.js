@@ -62,7 +62,7 @@ exports.bookEvent = async (req, res) => {
             name,
             email,
             guests,
-            eventTitle: event.title, // Assigning event title
+            eventName: event.name, // Assigning event name
             date
         });
 
@@ -101,7 +101,7 @@ exports.deleteEventBooking = async (req, res) => {
 exports.updateEventBooking = async (req, res) => {
     try {
         const eventBookingId = req.params.id;
-        const { name, email, date, eventTitle, guests } = req.body;
+        const { name, email, date, eventName, guests } = req.body;
 
         // Validate the eventBookingId
         if (!mongoose.Types.ObjectId.isValid(eventBookingId)) {
@@ -109,14 +109,14 @@ exports.updateEventBooking = async (req, res) => {
         }
 
         // Validate required fields
-        if (!eventTitle || !name || !email || !date || !guests) {
-            return res.status(400).json({ msg: 'Please provide all required fields: eventTitle, name, email, date, and guests.' });
+        if (!eventName || !name || !email || !date || !guests) {
+            return res.status(400).json({ msg: 'Please provide all required fields: eventName, name, email, date, and guests.' });
         }
 
         // Update the event booking using the Booking model
         const updatedBooking = await Booking.findByIdAndUpdate(
             eventBookingId,
-            { name, email, date, eventTitle, guests },
+            { name, email, date, eventName, guests },
             { new: true, runValidators: true }
         );
 
@@ -134,15 +134,15 @@ exports.updateEventBooking = async (req, res) => {
 // Create a new event
 exports.createEvent = async (req, res) => {
     try {
-        const { title, description, img } = req.body;
+        const { name, description, img } = req.body;
 
-        // Ensure title is present
-        if (!title) {
-            return res.status(400).json({ msg: 'Event title is required' });
+        // Ensure name is present
+        if (!name) {
+            return res.status(400).json({ msg: 'Event name is required' });
         }
 
         // Create new event (Image is optional)
-        const newEvent = new Event({ title, description, img });
+        const newEvent = new Event({ name, description, img });
         const savedEvent = await newEvent.save();
         res.status(201).json(savedEvent);
     } catch (err) {
@@ -155,7 +155,7 @@ exports.createEvent = async (req, res) => {
 exports.updateEvent = async (req, res) => {
     try {
         const eventId = req.params.id;
-        const { title, description, img } = req.body;
+        const { name, description, img } = req.body;
 
         // Validate the format of the ObjectId
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
@@ -163,14 +163,14 @@ exports.updateEvent = async (req, res) => {
         }
 
         // Validate required fields
-        if (!title) {
-            return res.status(400).json({ msg: 'Event title is required' });
+        if (!name) {
+            return res.status(400).json({ msg: 'Event name is required' });
         }
 
         // Update the event
         const updatedEvent = await Event.findByIdAndUpdate(
             eventId,
-            { title, description, img },
+            { name, description, img },
             { new: true, runValidators: true }
         );
 
