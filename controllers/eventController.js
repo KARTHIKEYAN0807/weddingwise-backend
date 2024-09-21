@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Event = require('../models/Event');
-const Booking = require('../models/Booking'); // Use the Booking model
+const Booking = require('../models/Booking');
 
 // Get all events
 exports.getAllEvents = async (req, res) => {

@@ -11,7 +11,12 @@ router.delete('/:id', eventController.deleteEvent);     // Delete an event
 
 // Event booking routes
 router.post('/book', eventController.bookEvent);                 // Book an event
-router.put('/bookings/:id', eventController.updateEventBooking); // Update event booking
-router.delete('/bookings/:id', eventController.deleteEventBooking); // Delete event booking
+router.put('/bookings/:id', eventController.updateEventBooking); // Update event booking by ID
+router.delete('/bookings/:id', eventController.deleteEventBooking); // Delete event booking by ID
+
+// Error handling for invalid routes (optional)
+router.all('*', (req, res) => {
+    res.status(404).json({ error: 'Route not found' });
+});
 
 module.exports = router;

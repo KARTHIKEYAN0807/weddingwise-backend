@@ -1,12 +1,21 @@
 const mongoose = require('mongoose');
 
-// Event schema definition, simplified like Vendor schema
+// Event schema definition
 const EventSchema = new mongoose.Schema({
-    name: { type: String, required: true },        // Event's name, required like vendor's name
-    description: { type: String },                 // Event's description, similar to vendor's description
-    img: { type: String },                         // Path to the event image, like vendor's image
-    // You can add more fields here if needed, similar to how vendors have extra details
-});
+    name: { 
+        type: String, 
+        required: [true, 'Event name is required'],  // Event's name is required with a custom error message
+        trim: true                                  // Automatically trims any leading or trailing spaces
+    },
+    description: { 
+        type: String, 
+        trim: true,                                 // Trims spaces from description
+        maxlength: 500                              // Optional: Limits description to 500 characters
+    },
+    img: { 
+        type: String, 
+        default: '/images/default-event.jpg'        // Provides a default image if none is supplied
+    },
+}, { timestamps: true });                           // Adds `createdAt` and `updatedAt` timestamps automatically
 
-// Export the Event model
 module.exports = mongoose.model('Event', EventSchema);

@@ -9,14 +9,14 @@ const BookingSchema = new mongoose.Schema({
     event: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Event',
-        required: function() { return this.bookingType === 'Event'; }
+        required: function () { return this.bookingType === 'Event'; }
     },
     vendor: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Vendor',
-        required: function() { return this.bookingType === 'Vendor'; }
+        required: function () { return this.bookingType === 'Vendor'; }
     },
-    name: { // Changed from eventTitle to name
+    name: { // 'name' is required for both events and vendors
         type: String,
         required: true,
     },
@@ -26,22 +26,22 @@ const BookingSchema = new mongoose.Schema({
     },
     guests: {
         type: Number,
-        required: function() { return this.bookingType === 'Event'; },
+        required: function () { return this.bookingType === 'Event'; }, // Guests only required for events
     },
     vendorName: {
         type: String,
-        required: function() { return this.bookingType === 'Vendor'; },
+        required: function () { return this.bookingType === 'Vendor'; }, // VendorName only required for vendors
     },
     date: {
         type: Date,
-        required: function() { return this.bookingType === 'Vendor'; },
+        required: function () { return this.bookingType === 'Vendor'; }, // Date only required for vendor bookings
     },
 }, { timestamps: true });
 
-// Pre-save hook to ensure default values and validation
-BookingSchema.pre('save', function(next) {
-    if (this.bookingType === 'Event' && !this.name) { // Changed from eventTitle to name
-        this.name = 'Untitled Event'; // Set default event name
+// Pre-save hook for default values if necessary
+BookingSchema.pre('save', function (next) {
+    if (this.bookingType === 'Event' && !this.name) {
+        this.name = 'Untitled Event'; // Default name if none is provided for events
     }
     next();
 });
