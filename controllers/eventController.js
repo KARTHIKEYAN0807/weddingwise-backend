@@ -37,11 +37,11 @@ exports.getEventById = async (req, res) => {
     }
 };
 
-// Book an event
+// Book an event using eventName instead of eventId
 exports.bookEvent = async (req, res) => {
     const { eventName, name, email, guests, date } = req.body;
 
-    // Validate input
+    // Validate input fields
     if (!eventName || !name || !email || !guests || !date) {
         return res.status(400).json({ status: 'error', msg: 'All fields are required: eventName, name, email, guests, and date.' });
     }
@@ -88,7 +88,7 @@ exports.updateEventBooking = async (req, res) => {
         return res.status(400).json({ status: 'error', msg: 'Invalid event booking ID format' });
     }
 
-    // Validate input
+    // Validate input fields
     if (!name || !email || !date || !eventName || !guests) {
         return res.status(400).json({ status: 'error', msg: 'All fields are required: name, email, date, eventName, and guests.' });
     }
