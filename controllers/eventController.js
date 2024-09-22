@@ -37,13 +37,17 @@ exports.getEventById = async (req, res) => {
     }
 };
 
-// Book an event using eventName
+// Book an event using eventId
 exports.bookEvent = async (req, res) => {
-    const { eventName, name, email, guests, date } = req.body;
+    const { eventId, name, email, guests, date } = req.body;
 
     // Validate input fields
-    if (!eventName || !name || !email || !guests || !date) {
-        return res.status(400).json({ status: 'error', msg: 'All fields are required: eventName, name, email, guests, and date.' });
+    if (!eventId || !name || !email || !guests || !date) {
+        return res.status(400).json({ status: 'error', msg: 'All fields are required: eventId, name, email, guests, and date.' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+        return res.status(400).json({ status: 'error', msg: 'Invalid event ID format' });
     }
 
     if (!isValidEmail(email)) {
@@ -55,7 +59,7 @@ exports.bookEvent = async (req, res) => {
     }
 
     try {
-        const event = await Event.findOne({ name: eventName });
+        const event = await Event.findById(eventId);
         if (!event) {
             return res.status(404).json({ status: 'error', msg: 'Event not found' });
         }
