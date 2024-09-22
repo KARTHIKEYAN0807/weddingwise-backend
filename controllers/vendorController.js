@@ -1,3 +1,4 @@
+// backend/controllers/vendorController.js
 const mongoose = require('mongoose');
 const Vendor = require('../models/Vendor');
 const Booking = require('../models/Booking');
@@ -78,28 +79,6 @@ exports.bookVendor = async (req, res) => {
     }
 };
 
-// Delete a vendor booking
-exports.deleteVendorBooking = async (req, res) => {
-    try {
-        const vendorBookingId = req.params.id;
-
-        if (!mongoose.Types.ObjectId.isValid(vendorBookingId)) {
-            return res.status(400).json({ status: 'error', msg: 'Invalid vendor booking ID format' });
-        }
-
-        const vendorBooking = await Booking.findById(vendorBookingId);
-        if (!vendorBooking) {
-            return res.status(404).json({ status: 'error', msg: 'Vendor booking not found' });
-        }
-
-        await Booking.findByIdAndDelete(vendorBookingId);
-        res.json({ status: 'success', msg: 'Vendor booking deleted' });
-    } catch (err) {
-        console.error('Error deleting vendor booking:', err);
-        res.status(500).json({ status: 'error', msg: 'Server error while deleting vendor booking' });
-    }
-};
-
 // Update a vendor booking
 exports.updateVendorBooking = async (req, res) => {
     try {
@@ -142,6 +121,28 @@ exports.updateVendorBooking = async (req, res) => {
     } catch (err) {
         console.error('Error updating vendor booking:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while updating vendor booking' });
+    }
+};
+
+// Delete a vendor booking
+exports.deleteVendorBooking = async (req, res) => {
+    try {
+        const vendorBookingId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(vendorBookingId)) {
+            return res.status(400).json({ status: 'error', msg: 'Invalid vendor booking ID format' });
+        }
+
+        const vendorBooking = await Booking.findById(vendorBookingId);
+        if (!vendorBooking) {
+            return res.status(404).json({ status: 'error', msg: 'Vendor booking not found' });
+        }
+
+        await Booking.findByIdAndDelete(vendorBookingId);
+        res.json({ status: 'success', msg: 'Vendor booking deleted' });
+    } catch (err) {
+        console.error('Error deleting vendor booking:', err);
+        res.status(500).json({ status: 'error', msg: 'Server error while deleting vendor booking' });
     }
 };
 
