@@ -9,15 +9,20 @@ async function confirmBooking(req, res) {
         const { bookedEvents, bookedVendors } = req.body;
         const userEmail = req.user.email;
 
+        // Validate that the necessary bookings are provided
+        if ((!bookedEvents || bookedEvents.length === 0) && (!bookedVendors || bookedVendors.length === 0)) {
+            return res.status(400).json({ msg: 'No events or vendors provided for booking.' });
+        }
+
         // Save the events and vendors to the database if they haven't been saved yet
-        const savedEvents = await saveBookings(bookedEvents, 'Event');
-        const savedVendors = await saveBookings(bookedVendors, 'Vendor');
+        const savedEvents = await saveBookings(bookedEvents || [], 'Event');
+        const savedVendors = await saveBookings(bookedVendors || [], 'Vendor');
 
         // Generate the HTML content for the email
         const htmlContent = generateEmailContent(savedEvents, savedVendors);
 
         // Send confirmation email
-        let transporter = nodemailer.createTransport({
+        const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
@@ -25,7 +30,7 @@ async function confirmBooking(req, res) {
             },
         });
 
-        let mailOptions = {
+        const mailOptions = {
             from: process.env.EMAIL_USER,
             to: userEmail,
             subject: 'Booking Confirmation - WeddingWise',
@@ -48,26 +53,26 @@ async function confirmBooking(req, res) {
 // Helper function to save bookings to the database if not already saved
 async function saveBookings(bookings, bookingType) {
     const savedBookings = [];
+
     for (const booking of bookings) {
+        // If the booking doesn't have an _id or if it starts with 'local-', treat it as a new booking
         if (!booking._id || booking._id.startsWith('local-')) {
-            // Ensure required fields are provided
             if (bookingType === 'Event') {
                 if (!booking.eventName) {
                     booking.eventName = 'Untitled Event';
                 }
                 if (!booking.event) {
-                    // Fetch the event from the database if only ID is provided
                     const eventDetails = await Event.findById(booking.event);
                     if (!eventDetails) {
                         throw new Error('Event not found');
                     }
-                    booking.eventName = eventDetails.name; // Changed to eventName
+                    booking.eventName = eventDetails.name;
                     booking.img = eventDetails.img;
                 }
             }
 
+            // Remove temporary _id if it exists and save the booking
             try {
-                // Remove the temporary _id if it exists
                 if (booking._id && booking._id.startsWith('local-')) {
                     delete booking._id;
                 }
@@ -77,10 +82,10 @@ async function saveBookings(bookings, bookingType) {
                 savedBookings.push(savedBooking);
             } catch (err) {
                 console.error('Error saving booking:', err);
-                throw err; // Re-throw error to be caught in the calling function
+                throw err;
             }
         } else {
-            // Fetch the full data of existing bookings from the database
+            // Fetch existing bookings if they already exist
             const existingBooking = await Booking.findById(booking._id);
             savedBookings.push(existingBooking);
         }
@@ -88,13 +93,13 @@ async function saveBookings(bookings, bookingType) {
     return savedBookings;
 }
 
-// Helper function to generate email HTML content without a logo
+// Helper function to generate email HTML content
 function generateEmailContent(bookedEvents, bookedVendors) {
     const eventItemsHtml = bookedEvents.map(event => `
         <div style="margin-bottom: 10px;">
-            <h3>${encodeHTML(event.eventName)}</h3> <!-- Changed to eventName -->
+            <h3>${encodeHTML(event.eventName)}</h3>
             <p>Guests: ${event.guests || 'Not specified'}</p>
-            ${event.img ? `<img src="${event.img}" alt="${encodeHTML(event.eventName)}" style="max-width: 100%;">` : ''} <!-- Changed to eventName -->
+            ${event.img ? `<img src="${event.img}" alt="${encodeHTML(event.eventName)}" style="max-width: 100%;">` : ''}
         </div>
     `).join('');
 
