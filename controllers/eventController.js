@@ -10,7 +10,7 @@ const isValidFutureDate = (date) => !isNaN(Date.parse(date)) && new Date(date) >
 exports.getAllEvents = async (req, res) => {
     try {
         const events = await Event.find();
-        res.json({ status: 'success', data: events });
+        res.status(200).json({ status: 'success', data: events });
     } catch (err) {
         console.error('Error fetching events:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while fetching events' });
@@ -30,7 +30,7 @@ exports.getEventById = async (req, res) => {
         if (!event) {
             return res.status(404).json({ status: 'error', msg: 'Event not found' });
         }
-        res.json({ status: 'success', data: event });
+        res.status(200).json({ status: 'success', data: event });
     } catch (err) {
         console.error('Error fetching event:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while fetching event' });
@@ -114,7 +114,7 @@ exports.updateEventBooking = async (req, res) => {
             return res.status(404).json({ status: 'error', msg: 'Event booking not found' });
         }
 
-        res.json({ status: 'success', data: updatedBooking });
+        res.status(200).json({ status: 'success', data: updatedBooking });
     } catch (err) {
         console.error('Error updating event booking:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while updating event booking' });
@@ -136,7 +136,7 @@ exports.deleteEventBooking = async (req, res) => {
         }
 
         await Booking.findByIdAndDelete(eventBookingId);
-        res.json({ status: 'success', msg: 'Event booking deleted' });
+        res.status(200).json({ status: 'success', msg: 'Event booking deleted' });
     } catch (err) {
         console.error('Error deleting event booking:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while deleting event booking' });
@@ -185,7 +185,7 @@ exports.updateEvent = async (req, res) => {
             return res.status(404).json({ status: 'error', msg: 'Event not found' });
         }
 
-        res.json({ status: 'success', data: updatedEvent });
+        res.status(200).json({ status: 'success', data: updatedEvent });
     } catch (err) {
         console.error('Error updating event:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while updating event' });
@@ -207,7 +207,7 @@ exports.deleteEvent = async (req, res) => {
         }
 
         await Event.findByIdAndDelete(eventId);
-        res.json({ status: 'success', msg: 'Event deleted' });
+        res.status(200).json({ status: 'success', msg: 'Event deleted' });
     } catch (err) {
         console.error('Error deleting event:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while deleting event' });
