@@ -49,9 +49,9 @@ exports.bookVendor = async (req, res) => {
             return res.status(400).json({ msg: 'Please provide a valid email address.' });
         }
 
-        // Validate the date format
-        if (isNaN(Date.parse(date))) {
-            return res.status(400).json({ msg: 'Please provide a valid date.' });
+        // Validate the date format and ensure it is in the future
+        if (isNaN(Date.parse(date)) || new Date(date) < new Date()) {
+            return res.status(400).json({ msg: 'Please provide a valid date in the future.' });
         }
 
         // Find the vendor by name
@@ -113,7 +113,7 @@ exports.updateVendorBooking = async (req, res) => {
 
         // Validate input
         if (!name || !email || !date || !vendorName) {
-            return res.status(400).json({ msg: 'All fields are required: name, email, date, vendorName.' });
+            return res.status(400).json({ msg: 'All fields are required: name, email, date, and vendorName.' });
         }
 
         // Validate email format
@@ -122,9 +122,9 @@ exports.updateVendorBooking = async (req, res) => {
             return res.status(400).json({ msg: 'Please provide a valid email address.' });
         }
 
-        // Validate the date format
-        if (isNaN(Date.parse(date))) {
-            return res.status(400).json({ msg: 'Please provide a valid date.' });
+        // Validate the date format and ensure it is in the future
+        if (isNaN(Date.parse(date)) || new Date(date) < new Date()) {
+            return res.status(400).json({ msg: 'Please provide a valid date in the future.' });
         }
 
         // Find and update the vendor booking
