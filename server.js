@@ -50,7 +50,7 @@ const corsOptions = {
         const allowedOrigins = [
             'https://weddingwisebooking.netlify.app',
             'https://master--weddingwisebooking.netlify.app',
-            'http://localhost:5173'
+            'http://localhost:5173',
         ];
 
         // Allow requests with no origin, like mobile apps or curl requests

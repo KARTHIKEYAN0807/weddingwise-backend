@@ -41,7 +41,6 @@ exports.getEventById = async (req, res) => {
 exports.bookEvent = async (req, res) => {
     const { eventId, name, email, guests, date } = req.body;
 
-    // Validate input fields
     if (!eventId || !name || !email || !guests || !date) {
         return res.status(400).json({ status: 'error', msg: 'All fields are required: eventId, name, email, guests, and date.' });
     }
@@ -92,7 +91,6 @@ exports.updateEventBooking = async (req, res) => {
         return res.status(400).json({ status: 'error', msg: 'Invalid event booking ID format' });
     }
 
-    // Validate input fields
     if (!name || !email || !date || !eventName || !guests) {
         return res.status(400).json({ status: 'error', msg: 'All fields are required: name, email, date, eventName, and guests.' });
     }
