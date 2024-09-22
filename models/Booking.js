@@ -1,4 +1,3 @@
-// backend/models/Booking.js
 const mongoose = require('mongoose');
 
 const BookingSchema = new mongoose.Schema({
@@ -29,19 +28,26 @@ const BookingSchema = new mongoose.Schema({
     guests: {
         type: Number,
         required: function () { return this.bookingType === 'Event'; },
+        validate: {
+            validator: function(value) {
+                return value > 0;
+            },
+            message: 'Number of guests must be a positive number.',
+        },
     },
     date: {
         type: Date,
         required: function () { return this.bookingType === 'Vendor'; },
         validate: {
             validator: function(value) {
-                return value >= Date.now();
+                return this.isNew ? value > Date.now() : true; // Only validate on creation, not updates
             },
-            message: 'Booking date must be in the future.'
-        }
+            message: 'Booking date must be in the future.',
+        },
     },
 }, { timestamps: true });
 
+// Set default name if it's an Event booking without a name
 BookingSchema.pre('save', function (next) {
     if (this.bookingType === 'Event' && !this.name) {
         this.name = 'Untitled Event';

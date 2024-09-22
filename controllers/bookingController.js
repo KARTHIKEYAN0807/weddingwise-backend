@@ -55,24 +55,24 @@ async function saveBookings(bookings, bookingType) {
     const savedBookings = [];
 
     for (const booking of bookings) {
-        // If the booking doesn't have an _id or if it starts with 'local-', treat it as a new booking
-        if (!booking._id || booking._id.startsWith('local-')) {
-            if (bookingType === 'Event') {
-                if (!booking.eventName) {
-                    booking.eventName = 'Untitled Event';
-                }
-                if (!booking.event) {
-                    const eventDetails = await Event.findById(booking.event);
-                    if (!eventDetails) {
-                        throw new Error('Event not found');
+        try {
+            // If the booking doesn't have an _id or if it starts with 'local-', treat it as a new booking
+            if (!booking._id || booking._id.startsWith('local-')) {
+                if (bookingType === 'Event') {
+                    if (!booking.eventName) {
+                        booking.eventName = 'Untitled Event';
                     }
-                    booking.eventName = eventDetails.name;
-                    booking.img = eventDetails.img;
+                    if (!booking.event) {
+                        const eventDetails = await Event.findById(booking.event);
+                        if (!eventDetails) {
+                            throw new Error(`Event not found with ID: ${booking.event}`);
+                        }
+                        booking.eventName = eventDetails.name;
+                        booking.img = eventDetails.img;
+                    }
                 }
-            }
 
-            // Remove temporary _id if it exists and save the booking
-            try {
+                // Remove temporary _id if it exists and save the booking
                 if (booking._id && booking._id.startsWith('local-')) {
                     delete booking._id;
                 }
@@ -80,14 +80,17 @@ async function saveBookings(bookings, bookingType) {
                 const savedBooking = new Booking({ ...booking, bookingType });
                 await savedBooking.save();
                 savedBookings.push(savedBooking);
-            } catch (err) {
-                console.error('Error saving booking:', err);
-                throw err;
+            } else {
+                // Fetch existing bookings if they already exist
+                const existingBooking = await Booking.findById(booking._id);
+                if (!existingBooking) {
+                    throw new Error(`Booking not found with ID: ${booking._id}`);
+                }
+                savedBookings.push(existingBooking);
             }
-        } else {
-            // Fetch existing bookings if they already exist
-            const existingBooking = await Booking.findById(booking._id);
-            savedBookings.push(existingBooking);
+        } catch (err) {
+            console.error('Error saving booking:', err);
+            throw err; // Throw error to prevent further processing
         }
     }
     return savedBookings;

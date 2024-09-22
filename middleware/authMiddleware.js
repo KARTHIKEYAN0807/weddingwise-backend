@@ -1,23 +1,27 @@
 const jwt = require('jsonwebtoken');
 
 module.exports = function (req, res, next) {
-    // Get token from the Authorization header
+    // Get token from Authorization header
     const authHeader = req.header('Authorization');
 
-    // Check if the token is missing or if the format is incorrect
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        console.warn('Authorization header missing or invalid'); // Debugging log
+    // Check if the Authorization header is present and properly formatted
+    if (!authHeader || !authHeader.trim().startsWith('Bearer ')) {
+        console.warn('Authorization header missing or improperly formatted'); // Debugging log
         return res.status(401).json({ msg: 'No token, authorization denied' });
     }
 
-    // Extract the token by removing 'Bearer ' prefix
-    const token = authHeader.split(' ')[1];
+    // Extract the token by removing the 'Bearer ' prefix
+    const token = authHeader.split(' ')[1].trim();
+
+    if (!token) {
+        return res.status(401).json({ msg: 'Token is missing, authorization denied' });
+    }
 
     try {
-        // Verify the token using the JWT_SECRET from environment variables
+        // Verify token using the JWT_SECRET from environment variables
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Attach the user data to the request object
+        // Attach the decoded user data to the request object for future middleware/routes
         req.user = decoded.user;
 
         // Proceed to the next middleware or route handler
@@ -25,12 +29,12 @@ module.exports = function (req, res, next) {
     } catch (err) {
         console.error('Token verification failed:', err.message);
 
-        // Provide a more specific error message if the token is expired
+        // Handle specific token expiration error
         if (err.name === 'TokenExpiredError') {
             return res.status(401).json({ msg: 'Token has expired, please login again' });
         }
 
-        // Return a generic invalid token message for other errors
+        // Return generic invalid token message for other errors
         return res.status(401).json({ msg: 'Token is not valid' });
     }
 };

@@ -18,7 +18,6 @@ exports.getEventById = async (req, res) => {
     try {
         const eventId = req.params.id;
 
-        // Validate the format of the ObjectId
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
@@ -49,6 +48,17 @@ exports.bookEvent = async (req, res) => {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
 
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ msg: 'Invalid email format' });
+        }
+
+        // Validate future date
+        if (new Date(date) < new Date()) {
+            return res.status(400).json({ msg: 'The event date must be in the future.' });
+        }
+
         // Find the event by ID
         const event = await Event.findById(eventId);
         if (!event) {
@@ -62,7 +72,7 @@ exports.bookEvent = async (req, res) => {
             name,
             email,
             guests,
-            eventName: event.name, // Assigning event name
+            eventName: event.name,
             date
         });
 
@@ -79,7 +89,6 @@ exports.deleteEventBooking = async (req, res) => {
     try {
         const eventBookingId = req.params.id;
 
-        // Validate the eventBookingId
         if (!mongoose.Types.ObjectId.isValid(eventBookingId)) {
             return res.status(400).json({ msg: 'Invalid event booking ID format' });
         }
@@ -103,17 +112,25 @@ exports.updateEventBooking = async (req, res) => {
         const eventBookingId = req.params.id;
         const { name, email, date, eventName, guests } = req.body;
 
-        // Validate the eventBookingId
         if (!mongoose.Types.ObjectId.isValid(eventBookingId)) {
             return res.status(400).json({ msg: 'Invalid event booking ID format' });
         }
 
-        // Validate required fields
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ msg: 'Invalid email format' });
+        }
+
         if (!eventName || !name || !email || !date || !guests) {
             return res.status(400).json({ msg: 'Please provide all required fields: eventName, name, email, date, and guests.' });
         }
 
-        // Update the event booking using the Booking model
+        // Validate future date
+        if (new Date(date) < new Date()) {
+            return res.status(400).json({ msg: 'The event date must be in the future.' });
+        }
+
         const updatedBooking = await Booking.findByIdAndUpdate(
             eventBookingId,
             { name, email, date, eventName, guests },
@@ -136,12 +153,10 @@ exports.createEvent = async (req, res) => {
     try {
         const { name, description, img } = req.body;
 
-        // Ensure name is present
         if (!name) {
             return res.status(400).json({ msg: 'Event name is required' });
         }
 
-        // Create new event (Image is optional)
         const newEvent = new Event({ name, description, img });
         const savedEvent = await newEvent.save();
         res.status(201).json(savedEvent);
@@ -157,17 +172,14 @@ exports.updateEvent = async (req, res) => {
         const eventId = req.params.id;
         const { name, description, img } = req.body;
 
-        // Validate the format of the ObjectId
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
 
-        // Validate required fields
         if (!name) {
             return res.status(400).json({ msg: 'Event name is required' });
         }
 
-        // Update the event
         const updatedEvent = await Event.findByIdAndUpdate(
             eventId,
             { name, description, img },
@@ -190,7 +202,6 @@ exports.deleteEvent = async (req, res) => {
     try {
         const eventId = req.params.id;
 
-        // Validate the eventId
         if (!mongoose.Types.ObjectId.isValid(eventId)) {
             return res.status(400).json({ msg: 'Invalid event ID format' });
         }
