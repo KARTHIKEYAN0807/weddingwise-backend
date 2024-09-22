@@ -18,7 +18,6 @@ exports.getVendorById = async (req, res) => {
     try {
         const vendorId = req.params.id;
 
-        // Validate the format of the ObjectId
         if (!mongoose.Types.ObjectId.isValid(vendorId)) {
             return res.status(400).json({ msg: 'Invalid vendor ID format' });
         }
@@ -41,7 +40,18 @@ exports.bookVendor = async (req, res) => {
 
         // Validate input
         if (!vendorName || !name || !email || !date) {
-            return res.status(400).json({ msg: 'Please provide all required fields: vendorName, name, email, and date.' });
+            return res.status(400).json({ msg: 'All fields are required: vendorName, name, email, and date.' });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ msg: 'Please provide a valid email address.' });
+        }
+
+        // Validate the date format
+        if (isNaN(Date.parse(date))) {
+            return res.status(400).json({ msg: 'Please provide a valid date.' });
         }
 
         // Find the vendor by name
@@ -73,7 +83,6 @@ exports.deleteVendorBooking = async (req, res) => {
     try {
         const vendorBookingId = req.params.id;
 
-        // Validate the vendorBookingId
         if (!mongoose.Types.ObjectId.isValid(vendorBookingId)) {
             return res.status(400).json({ msg: 'Invalid vendor booking ID format' });
         }
@@ -102,7 +111,23 @@ exports.updateVendorBooking = async (req, res) => {
             return res.status(400).json({ msg: 'Invalid vendor booking ID format' });
         }
 
-        // Find and update the vendor booking using the Booking model
+        // Validate input
+        if (!name || !email || !date || !vendorName) {
+            return res.status(400).json({ msg: 'All fields are required: name, email, date, vendorName.' });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ msg: 'Please provide a valid email address.' });
+        }
+
+        // Validate the date format
+        if (isNaN(Date.parse(date))) {
+            return res.status(400).json({ msg: 'Please provide a valid date.' });
+        }
+
+        // Find and update the vendor booking
         const updatedBooking = await Booking.findByIdAndUpdate(
             vendorBookingId,
             { name, email, date, vendorName },
@@ -125,12 +150,10 @@ exports.createVendor = async (req, res) => {
     try {
         const { name, description, img } = req.body;
 
-        // Ensure name is present
         if (!name) {
             return res.status(400).json({ msg: 'Vendor name is required' });
         }
 
-        // Create new vendor (Image is optional)
         const newVendor = new Vendor({ name, description, img });
         const savedVendor = await newVendor.save();
         res.status(201).json(savedVendor);
@@ -146,7 +169,6 @@ exports.updateVendor = async (req, res) => {
         const vendorId = req.params.id;
         const { name, description, img } = req.body;
 
-        // Validate the format of the ObjectId
         if (!mongoose.Types.ObjectId.isValid(vendorId)) {
             return res.status(400).json({ msg: 'Invalid vendor ID format' });
         }
@@ -156,7 +178,6 @@ exports.updateVendor = async (req, res) => {
             return res.status(404).json({ msg: 'Vendor not found' });
         }
 
-        // Update the vendor
         const updatedVendor = await Vendor.findByIdAndUpdate(
             vendorId,
             { name, description, img },
@@ -174,7 +195,6 @@ exports.deleteVendor = async (req, res) => {
     try {
         const vendorId = req.params.id;
 
-        // Validate the vendorId
         if (!mongoose.Types.ObjectId.isValid(vendorId)) {
             return res.status(400).json({ msg: 'Invalid vendor ID format' });
         }
