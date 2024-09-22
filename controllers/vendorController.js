@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Vendor = require('../models/Vendor');
-const Booking = require('../models/Booking'); // Use the Booking model
+const Booking = require('../models/Booking');
 
 // Get all vendors
 exports.getAllVendors = async (req, res) => {
@@ -44,7 +44,7 @@ exports.bookVendor = async (req, res) => {
             return res.status(400).json({ msg: 'Please provide all required fields: vendorName, name, email, and date.' });
         }
 
-        // Find the vendor by name (assuming vendorName is a unique identifier)
+        // Find the vendor by name
         const vendor = await Vendor.findOne({ name: vendorName });
         if (!vendor) {
             return res.status(404).json({ msg: 'Vendor not found' });
