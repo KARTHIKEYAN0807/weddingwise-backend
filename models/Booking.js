@@ -16,21 +16,28 @@ const BookingSchema = new mongoose.Schema({
         ref: 'Vendor',
         required: function () { return this.bookingType === 'Vendor'; }
     },
-    name: { // Use 'name' for both events and vendors
+    name: { 
         type: String,
         required: true,
     },
     email: {
         type: String,
         required: true,
+        match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please provide a valid email address.'],
     },
     guests: {
         type: Number,
-        required: function () { return this.bookingType === 'Event'; }, // Guests only required for events
+        required: function () { return this.bookingType === 'Event'; }, // Guests required for events
     },
     date: {
         type: Date,
-        required: function () { return this.bookingType === 'Vendor'; }, // Date only required for vendor bookings
+        required: function () { return this.bookingType === 'Vendor'; }, // Date required for vendor bookings
+        validate: {
+            validator: function(value) {
+                return value >= Date.now(); // Date must be in the future
+            },
+            message: 'Booking date must be in the future.'
+        }
     },
 }, { timestamps: true });
 
