@@ -6,10 +6,10 @@ const Booking = require('../models/Booking');
 exports.getAllVendors = async (req, res) => {
     try {
         const vendors = await Vendor.find();
-        res.json(vendors);
+        res.json({ status: 'success', data: vendors });
     } catch (err) {
         console.error('Error fetching vendors:', err);
-        res.status(500).json({ msg: 'Server error while fetching vendors' });
+        res.status(500).json({ status: 'error', msg: 'Server error while fetching vendors' });
     }
 };
 
@@ -19,17 +19,17 @@ exports.getVendorById = async (req, res) => {
         const vendorId = req.params.id;
 
         if (!mongoose.Types.ObjectId.isValid(vendorId)) {
-            return res.status(400).json({ msg: 'Invalid vendor ID format' });
+            return res.status(400).json({ status: 'error', msg: 'Invalid vendor ID format' });
         }
 
         const vendor = await Vendor.findById(vendorId);
         if (!vendor) {
-            return res.status(404).json({ msg: 'Vendor not found' });
+            return res.status(404).json({ status: 'error', msg: 'Vendor not found' });
         }
-        res.json(vendor);
+        res.json({ status: 'success', data: vendor });
     } catch (err) {
         console.error('Error fetching vendor:', err);
-        res.status(500).json({ msg: 'Server error while fetching vendor' });
+        res.status(500).json({ status: 'error', msg: 'Server error while fetching vendor' });
     }
 };
 
@@ -40,24 +40,24 @@ exports.bookVendor = async (req, res) => {
 
         // Validate input
         if (!vendorName || !name || !email || !date) {
-            return res.status(400).json({ msg: 'All fields are required: vendorName, name, email, and date.' });
+            return res.status(400).json({ status: 'error', msg: 'All fields are required: vendorName, name, email, and date.' });
         }
 
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).json({ msg: 'Please provide a valid email address.' });
+            return res.status(400).json({ status: 'error', msg: 'Please provide a valid email address.' });
         }
 
         // Validate the date format and ensure it is in the future
         if (isNaN(Date.parse(date)) || new Date(date) < new Date()) {
-            return res.status(400).json({ msg: 'Please provide a valid date in the future.' });
+            return res.status(400).json({ status: 'error', msg: 'Please provide a valid date in the future.' });
         }
 
         // Find the vendor by name
         const vendor = await Vendor.findOne({ name: vendorName });
         if (!vendor) {
-            return res.status(404).json({ msg: 'Vendor not found' });
+            return res.status(404).json({ status: 'error', msg: 'Vendor not found' });
         }
 
         // Create a new booking using the Booking model
@@ -71,10 +71,10 @@ exports.bookVendor = async (req, res) => {
         });
 
         const savedVendorBooking = await newVendorBooking.save();
-        res.status(201).json(savedVendorBooking);
+        res.status(201).json({ status: 'success', data: savedVendorBooking });
     } catch (err) {
         console.error('Error booking vendor:', err);
-        res.status(500).json({ msg: 'Server error while booking vendor' });
+        res.status(500).json({ status: 'error', msg: 'Server error while booking vendor' });
     }
 };
 
@@ -84,19 +84,19 @@ exports.deleteVendorBooking = async (req, res) => {
         const vendorBookingId = req.params.id;
 
         if (!mongoose.Types.ObjectId.isValid(vendorBookingId)) {
-            return res.status(400).json({ msg: 'Invalid vendor booking ID format' });
+            return res.status(400).json({ status: 'error', msg: 'Invalid vendor booking ID format' });
         }
 
         const vendorBooking = await Booking.findById(vendorBookingId);
         if (!vendorBooking) {
-            return res.status(404).json({ msg: 'Vendor booking not found' });
+            return res.status(404).json({ status: 'error', msg: 'Vendor booking not found' });
         }
 
         await Booking.findByIdAndDelete(vendorBookingId);
-        res.json({ msg: 'Vendor booking deleted' });
+        res.json({ status: 'success', msg: 'Vendor booking deleted' });
     } catch (err) {
         console.error('Error deleting vendor booking:', err);
-        res.status(500).json({ msg: 'Server error while deleting vendor booking' });
+        res.status(500).json({ status: 'error', msg: 'Server error while deleting vendor booking' });
     }
 };
 
@@ -108,23 +108,23 @@ exports.updateVendorBooking = async (req, res) => {
 
         // Validate the vendorBookingId
         if (!mongoose.Types.ObjectId.isValid(vendorBookingId)) {
-            return res.status(400).json({ msg: 'Invalid vendor booking ID format' });
+            return res.status(400).json({ status: 'error', msg: 'Invalid vendor booking ID format' });
         }
 
         // Validate input
         if (!name || !email || !date || !vendorName) {
-            return res.status(400).json({ msg: 'All fields are required: name, email, date, and vendorName.' });
+            return res.status(400).json({ status: 'error', msg: 'All fields are required: name, email, date, and vendorName.' });
         }
 
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).json({ msg: 'Please provide a valid email address.' });
+            return res.status(400).json({ status: 'error', msg: 'Please provide a valid email address.' });
         }
 
         // Validate the date format and ensure it is in the future
         if (isNaN(Date.parse(date)) || new Date(date) < new Date()) {
-            return res.status(400).json({ msg: 'Please provide a valid date in the future.' });
+            return res.status(400).json({ status: 'error', msg: 'Please provide a valid date in the future.' });
         }
 
         // Find and update the vendor booking
@@ -135,13 +135,13 @@ exports.updateVendorBooking = async (req, res) => {
         );
 
         if (!updatedBooking) {
-            return res.status(404).json({ msg: 'Vendor booking not found' });
+            return res.status(404).json({ status: 'error', msg: 'Vendor booking not found' });
         }
 
-        res.json(updatedBooking);
+        res.json({ status: 'success', data: updatedBooking });
     } catch (err) {
         console.error('Error updating vendor booking:', err);
-        res.status(500).json({ msg: 'Server error while updating vendor booking' });
+        res.status(500).json({ status: 'error', msg: 'Server error while updating vendor booking' });
     }
 };
 
@@ -151,15 +151,15 @@ exports.createVendor = async (req, res) => {
         const { name, description, img } = req.body;
 
         if (!name) {
-            return res.status(400).json({ msg: 'Vendor name is required' });
+            return res.status(400).json({ status: 'error', msg: 'Vendor name is required' });
         }
 
         const newVendor = new Vendor({ name, description, img });
         const savedVendor = await newVendor.save();
-        res.status(201).json(savedVendor);
+        res.status(201).json({ status: 'success', data: savedVendor });
     } catch (err) {
         console.error('Error creating vendor:', err);
-        res.status(500).json({ msg: 'Server error while creating vendor' });
+        res.status(500).json({ status: 'error', msg: 'Server error while creating vendor' });
     }
 };
 
@@ -170,12 +170,12 @@ exports.updateVendor = async (req, res) => {
         const { name, description, img } = req.body;
 
         if (!mongoose.Types.ObjectId.isValid(vendorId)) {
-            return res.status(400).json({ msg: 'Invalid vendor ID format' });
+            return res.status(400).json({ status: 'error', msg: 'Invalid vendor ID format' });
         }
 
         const vendor = await Vendor.findById(vendorId);
         if (!vendor) {
-            return res.status(404).json({ msg: 'Vendor not found' });
+            return res.status(404).json({ status: 'error', msg: 'Vendor not found' });
         }
 
         const updatedVendor = await Vendor.findByIdAndUpdate(
@@ -183,10 +183,10 @@ exports.updateVendor = async (req, res) => {
             { name, description, img },
             { new: true, runValidators: true }
         );
-        res.json(updatedVendor);
+        res.json({ status: 'success', data: updatedVendor });
     } catch (err) {
         console.error('Error updating vendor:', err);
-        res.status(500).json({ msg: 'Server error while updating vendor' });
+        res.status(500).json({ status: 'error', msg: 'Server error while updating vendor' });
     }
 };
 
@@ -196,18 +196,18 @@ exports.deleteVendor = async (req, res) => {
         const vendorId = req.params.id;
 
         if (!mongoose.Types.ObjectId.isValid(vendorId)) {
-            return res.status(400).json({ msg: 'Invalid vendor ID format' });
+            return res.status(400).json({ status: 'error', msg: 'Invalid vendor ID format' });
         }
 
         const vendor = await Vendor.findById(vendorId);
         if (!vendor) {
-            return res.status(404).json({ msg: 'Vendor not found' });
+            return res.status(404).json({ status: 'error', msg: 'Vendor not found' });
         }
 
         await Vendor.findByIdAndDelete(vendorId);
-        res.json({ msg: 'Vendor deleted' });
+        res.json({ status: 'success', msg: 'Vendor deleted' });
     } catch (err) {
         console.error('Error deleting vendor:', err);
-        res.status(500).json({ msg: 'Server error while deleting vendor' });
+        res.status(500).json({ status: 'error', msg: 'Server error while deleting vendor' });
     }
 };
