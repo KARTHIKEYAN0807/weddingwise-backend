@@ -2,6 +2,15 @@ const mongoose = require('mongoose');
 const Vendor = require('../models/Vendor');
 const Booking = require('../models/Booking');
 
+// Constants for HTTP status codes
+const HTTP_STATUS = {
+    OK: 200,
+    CREATED: 201,
+    BAD_REQUEST: 400,
+    NOT_FOUND: 404,
+    SERVER_ERROR: 500
+};
+
 // Helper functions for validation
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const isValidFutureDate = (date) => !isNaN(Date.parse(date)) && new Date(date) > new Date();
@@ -10,10 +19,10 @@ const isValidFutureDate = (date) => !isNaN(Date.parse(date)) && new Date(date) >
 exports.getAllVendors = async (req, res) => {
     try {
         const vendors = await Vendor.find();
-        res.json({ status: 'success', data: vendors });
+        res.status(HTTP_STATUS.OK).json({ status: 'success', data: vendors });
     } catch (err) {
         console.error('Error fetching vendors:', err);
-        res.status(500).json({ status: 'error', msg: 'Server error while fetching vendors' });
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while fetching vendors' });
     }
 };
 
@@ -22,51 +31,48 @@ exports.getVendorById = async (req, res) => {
     const vendorId = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(vendorId)) {
-        return res.status(400).json({ status: 'error', msg: 'Invalid vendor ID format' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Invalid vendor ID format' });
     }
 
     try {
         const vendor = await Vendor.findById(vendorId);
         if (!vendor) {
-            return res.status(404).json({ status: 'error', msg: 'Vendor not found' });
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Vendor not found' });
         }
-        res.json({ status: 'success', data: vendor });
+        res.status(HTTP_STATUS.OK).json({ status: 'success', data: vendor });
     } catch (err) {
         console.error('Error fetching vendor:', err);
-        res.status(500).json({ status: 'error', msg: 'Server error while fetching vendor' });
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while fetching vendor' });
     }
 };
 
 // Book a vendor
 exports.bookVendor = async (req, res) => {
-    // Log the incoming request data for debugging
-    console.log('Booking request body:', req.body);
-
-    const { vendorName, name, email, date, userId } = req.body; // Added userId
+    const { vendorName, name, email, date, userId } = req.body;
 
     if (!vendorName || !name || !email || !date || !userId) {
         console.error('Missing required fields:', req.body);
-        return res.status(400).json({ status: 'error', msg: 'All fields are required: vendorName, name, email, date, and userId.' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'All fields are required: vendorName, name, email, date, and userId.' });
     }
 
     if (!isValidEmail(email)) {
-        return res.status(400).json({ status: 'error', msg: 'Please provide a valid email address.' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Please provide a valid email address.' });
     }
 
     if (!isValidFutureDate(date)) {
-        return res.status(400).json({ status: 'error', msg: 'Please provide a valid date in the future.' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Please provide a valid date in the future.' });
     }
 
     try {
         const vendor = await Vendor.findOne({ name: vendorName });
         if (!vendor) {
-            return res.status(404).json({ status: 'error', msg: 'Vendor not found' });
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Vendor not found' });
         }
 
         const newVendorBooking = new Booking({
             bookingType: 'Vendor',
             vendor: vendor._id,
-            userId, // Added userId here
+            userId,
             name,
             email,
             date,
@@ -74,11 +80,10 @@ exports.bookVendor = async (req, res) => {
         });
 
         const savedVendorBooking = await newVendorBooking.save();
-        console.log('Booking saved:', savedVendorBooking);
-        res.status(201).json({ status: 'success', data: savedVendorBooking });
+        res.status(HTTP_STATUS.CREATED).json({ status: 'success', data: savedVendorBooking });
     } catch (err) {
         console.error('Error booking vendor:', err);
-        res.status(500).json({ status: 'error', msg: 'Server error while booking vendor' });
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while booking vendor' });
     }
 };
 
@@ -88,19 +93,19 @@ exports.updateVendorBooking = async (req, res) => {
     const { name, email, date, vendorName } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(vendorBookingId)) {
-        return res.status(400).json({ status: 'error', msg: 'Invalid vendor booking ID format' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Invalid vendor booking ID format' });
     }
 
     if (!name || !email || !date || !vendorName) {
-        return res.status(400).json({ status: 'error', msg: 'All fields are required: name, email, date, and vendorName.' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'All fields are required: name, email, date, and vendorName.' });
     }
 
     if (!isValidEmail(email)) {
-        return res.status(400).json({ status: 'error', msg: 'Please provide a valid email address.' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Please provide a valid email address.' });
     }
 
     if (!isValidFutureDate(date)) {
-        return res.status(400).json({ status: 'error', msg: 'Please provide a valid date in the future.' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Please provide a valid date in the future.' });
     }
 
     try {
@@ -111,13 +116,13 @@ exports.updateVendorBooking = async (req, res) => {
         );
 
         if (!updatedBooking) {
-            return res.status(404).json({ status: 'error', msg: 'Vendor booking not found' });
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Vendor booking not found' });
         }
 
-        res.json({ status: 'success', data: updatedBooking });
+        res.status(HTTP_STATUS.OK).json({ status: 'success', data: updatedBooking });
     } catch (err) {
         console.error('Error updating vendor booking:', err);
-        res.status(500).json({ status: 'error', msg: 'Server error while updating vendor booking' });
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while updating vendor booking' });
     }
 };
 
@@ -126,20 +131,20 @@ exports.deleteVendorBooking = async (req, res) => {
     const vendorBookingId = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(vendorBookingId)) {
-        return res.status(400).json({ status: 'error', msg: 'Invalid vendor booking ID format' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Invalid vendor booking ID format' });
     }
 
     try {
         const vendorBooking = await Booking.findById(vendorBookingId);
         if (!vendorBooking) {
-            return res.status(404).json({ status: 'error', msg: 'Vendor booking not found' });
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Vendor booking not found' });
         }
 
         await Booking.findByIdAndDelete(vendorBookingId);
-        res.json({ status: 'success', msg: 'Vendor booking deleted' });
+        res.status(HTTP_STATUS.OK).json({ status: 'success', msg: 'Vendor booking deleted' });
     } catch (err) {
         console.error('Error deleting vendor booking:', err);
-        res.status(500).json({ status: 'error', msg: 'Server error while deleting vendor booking' });
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while deleting vendor booking' });
     }
 };
 
@@ -148,16 +153,16 @@ exports.createVendor = async (req, res) => {
     const { name, description, img } = req.body;
 
     if (!name) {
-        return res.status(400).json({ status: 'error', msg: 'Vendor name is required' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Vendor name is required' });
     }
 
     try {
         const newVendor = new Vendor({ name, description, img });
         const savedVendor = await newVendor.save();
-        res.status(201).json({ status: 'success', data: savedVendor });
+        res.status(HTTP_STATUS.CREATED).json({ status: 'success', data: savedVendor });
     } catch (err) {
         console.error('Error creating vendor:', err);
-        res.status(500).json({ status: 'error', msg: 'Server error while creating vendor' });
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while creating vendor' });
     }
 };
 
@@ -167,13 +172,13 @@ exports.updateVendor = async (req, res) => {
     const { name, description, img } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(vendorId)) {
-        return res.status(400).json({ status: 'error', msg: 'Invalid vendor ID format' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Invalid vendor ID format' });
     }
 
     try {
         const vendor = await Vendor.findById(vendorId);
         if (!vendor) {
-            return res.status(404).json({ status: 'error', msg: 'Vendor not found' });
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Vendor not found' });
         }
 
         const updatedVendor = await Vendor.findByIdAndUpdate(
@@ -181,10 +186,10 @@ exports.updateVendor = async (req, res) => {
             { name, description, img },
             { new: true, runValidators: true }
         );
-        res.json({ status: 'success', data: updatedVendor });
+        res.status(HTTP_STATUS.OK).json({ status: 'success', data: updatedVendor });
     } catch (err) {
         console.error('Error updating vendor:', err);
-        res.status(500).json({ status: 'error', msg: 'Server error while updating vendor' });
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while updating vendor' });
     }
 };
 
@@ -193,19 +198,19 @@ exports.deleteVendor = async (req, res) => {
     const vendorId = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(vendorId)) {
-        return res.status(400).json({ status: 'error', msg: 'Invalid vendor ID format' });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Invalid vendor ID format' });
     }
 
     try {
         const vendor = await Vendor.findById(vendorId);
         if (!vendor) {
-            return res.status(404).json({ status: 'error', msg: 'Vendor not found' });
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Vendor not found' });
         }
 
         await Vendor.findByIdAndDelete(vendorId);
-        res.json({ status: 'success', msg: 'Vendor deleted' });
+        res.status(HTTP_STATUS.OK).json({ status: 'success', msg: 'Vendor deleted' });
     } catch (err) {
         console.error('Error deleting vendor:', err);
-        res.status(500).json({ status: 'error', msg: 'Server error while deleting vendor' });
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while deleting vendor' });
     }
 };

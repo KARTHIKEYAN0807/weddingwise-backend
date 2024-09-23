@@ -5,13 +5,13 @@ module.exports = function (req, res, next) {
 
     if (!authHeader || !authHeader.trim().startsWith('Bearer ')) {
         console.warn('Authorization header missing or improperly formatted');
-        return res.status(401).json({ msg: 'No token, authorization denied' });
+        return res.status(401).json({ success: false, message: 'No token, authorization denied' });
     }
 
     const token = authHeader.split(' ')[1].trim();
 
     if (!token) {
-        return res.status(401).json({ msg: 'Token is missing, authorization denied' });
+        return res.status(401).json({ success: false, message: 'Token is missing, authorization denied' });
     }
 
     try {
@@ -21,12 +21,13 @@ module.exports = function (req, res, next) {
     } catch (err) {
         console.error('Token verification failed:', err.message);
 
+        let message = 'Token is not valid';
         if (err.name === 'TokenExpiredError') {
-            return res.status(401).json({ msg: 'Token has expired, please login again' });
+            message = 'Token has expired, please login again';
         } else if (err.name === 'JsonWebTokenError') {
-            return res.status(401).json({ msg: 'Invalid token, authorization denied' });
-        } else {
-            return res.status(401).json({ msg: 'Token is not valid' });
+            message = 'Invalid token, authorization denied';
         }
+
+        return res.status(401).json({ success: false, message });
     }
 };
