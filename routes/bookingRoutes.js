@@ -7,16 +7,13 @@ const authMiddleware = require('../middleware/authMiddleware');
 console.log('Booking Controller:', bookingController);
 
 // POST /api/bookings/confirm-booking
-// Confirm event and vendor bookings for the authenticated user.
 router.post('/confirm-booking', authMiddleware, bookingController.confirmBooking);
 
 // GET /api/bookings
-// Fetch all bookings (events and vendors) for the authenticated user.
 router.get('/', authMiddleware, bookingController.getUserBookings);
 
 // GET /api/bookings/:id
-// Fetch a specific booking by its ID for the authenticated user.
-router.get('/:id', authMiddleware, bookingController.getBookingById);
+router.get('/:id', authMiddleware, bookingController.getBookingById); // Ensure this is defined
 
 // Catch-all route for invalid routes under /api/bookings
 router.all('*', (req, res) => {
