@@ -39,12 +39,17 @@ exports.getEventById = async (req, res) => {
 
 // Book an event
 exports.bookEvent = async (req, res) => {
-    console.log('Booking event request body:', req.body); // Log request body for debugging
+    console.log('Booking event request body:', req.body);
 
     const { eventName, name, email, date, guests } = req.body;
+    const userId = req.user ? req.user._id : null; // Assume req.user._id contains the logged-in user ID from auth middleware
+
+    if (!userId) {
+        return res.status(401).json({ status: 'error', msg: 'User authentication required' });
+    }
 
     if (!eventName || !name || !email || !date || !guests) {
-        console.error('Missing required fields:', req.body); // Log missing fields
+        console.error('Missing required fields:', req.body);
         return res.status(400).json({ status: 'error', msg: 'All fields are required: eventName, name, email, date, and guests.' });
     }
 
@@ -65,6 +70,7 @@ exports.bookEvent = async (req, res) => {
         const newEventBooking = new Booking({
             bookingType: 'Event',
             event: event._id,
+            userId,
             name,
             email,
             date,
@@ -73,7 +79,7 @@ exports.bookEvent = async (req, res) => {
         });
 
         const savedEventBooking = await newEventBooking.save();
-        console.log('Event booking saved:', savedEventBooking); // Log successful booking
+        console.log('Event booking saved:', savedEventBooking);
         res.status(201).json({ status: 'success', data: savedEventBooking });
     } catch (err) {
         console.error('Error booking event:', err);

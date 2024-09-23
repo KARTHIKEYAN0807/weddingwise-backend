@@ -39,14 +39,14 @@ exports.getVendorById = async (req, res) => {
 
 // Book a vendor
 exports.bookVendor = async (req, res) => {
-    // Log the incoming request data to help with debugging
+    // Log the incoming request data for debugging
     console.log('Booking request body:', req.body);
 
-    const { vendorName, name, email, date } = req.body;
+    const { vendorName, name, email, date, userId } = req.body; // Added userId
 
-    if (!vendorName || !name || !email || !date) {
+    if (!vendorName || !name || !email || !date || !userId) {
         console.error('Missing required fields:', req.body);
-        return res.status(400).json({ status: 'error', msg: 'All fields are required: vendorName, name, email, and date.' });
+        return res.status(400).json({ status: 'error', msg: 'All fields are required: vendorName, name, email, date, and userId.' });
     }
 
     if (!isValidEmail(email)) {
@@ -66,6 +66,7 @@ exports.bookVendor = async (req, res) => {
         const newVendorBooking = new Booking({
             bookingType: 'Vendor',
             vendor: vendor._id,
+            userId, // Added userId here
             name,
             email,
             date,

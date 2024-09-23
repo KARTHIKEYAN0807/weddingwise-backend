@@ -9,10 +9,12 @@ const bookingSchema = new mongoose.Schema({
     event: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Event',
+        required: function() { return this.bookingType === 'Event'; }
     },
     vendor: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Vendor',
+        required: function() { return this.bookingType === 'Vendor'; }
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -26,10 +28,16 @@ const bookingSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
+        validate: {
+            validator: function(v) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+            },
+            message: props => `${props.value} is not a valid email!`
+        }
     },
     guests: {
         type: Number,
-        required: true,
+        required: function() { return this.bookingType === 'Event'; }
     },
     date: {
         type: Date,
