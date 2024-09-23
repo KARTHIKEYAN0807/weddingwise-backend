@@ -37,7 +37,7 @@ const BookingSchema = new mongoose.Schema({
     },
     date: {
         type: Date,
-        required: function () { return this.bookingType === 'Vendor'; },
+        required: function () { return this.bookingType === 'Vendor' || this.bookingType === 'Event'; }, // Required for both
         validate: {
             validator: function(value) {
                 return this.isNew ? value > Date.now() : true; // Only validate on creation, not updates

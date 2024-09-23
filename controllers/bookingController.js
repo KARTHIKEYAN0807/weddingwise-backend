@@ -2,23 +2,47 @@ const Booking = require('../models/Booking');
 const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
 const Event = require('../models/Event'); // Import Event model
+const Vendor = require('../models/Vendor'); // Import Vendor model
 
 // Confirm booking
 async function confirmBooking(req, res) {
     try {
         const { bookedEvents, bookedVendors } = req.body;
+        
+        // Ensure the user is authenticated
+        if (!req.user || !req.user.email) {
+            return res.status(401).json({ msg: 'User not authenticated' });
+        }
+
         const userEmail = req.user.email;
 
-        // Validate that the necessary bookings are provided
+        // Validate that there are events or vendors to book
         if ((!bookedEvents || bookedEvents.length === 0) && (!bookedVendors || bookedVendors.length === 0)) {
             return res.status(400).json({ msg: 'No events or vendors provided for booking.' });
         }
 
-        // Save the events and vendors to the database if they haven't been saved yet
+        // Validate event and vendor data
+        if (bookedEvents) {
+            bookedEvents.forEach(event => {
+                if (!event.event || !mongoose.Types.ObjectId.isValid(event.event)) {
+                    throw new Error('Invalid event ID');
+                }
+            });
+        }
+
+        if (bookedVendors) {
+            bookedVendors.forEach(vendor => {
+                if (!vendor.vendor || !mongoose.Types.ObjectId.isValid(vendor.vendor)) {
+                    throw new Error('Invalid vendor ID');
+                }
+            });
+        }
+
+        // Save the events and vendors to the database if not already saved
         const savedEvents = await saveBookings(bookedEvents || [], 'Event');
         const savedVendors = await saveBookings(bookedVendors || [], 'Vendor');
 
-        // Generate the HTML content for the email
+        // Generate email content
         const htmlContent = generateEmailContent(savedEvents, savedVendors);
 
         // Send confirmation email
@@ -39,14 +63,22 @@ async function confirmBooking(req, res) {
 
         try {
             await transporter.sendMail(mailOptions);
-            res.json({ msg: 'Booking confirmed and email sent', bookings: { savedEvents, savedVendors } });
+            res.status(200).json({ 
+                status: 'success', 
+                message: 'Booking confirmed and email sent.', 
+                bookings: { savedEvents, savedVendors } 
+            });
         } catch (emailError) {
             console.error('Error sending confirmation email:', emailError);
-            res.status(500).json({ msg: 'Booking confirmed, but error sending confirmation email' });
+            res.status(500).json({ 
+                status: 'warning', 
+                message: 'Booking confirmed, but error sending confirmation email.', 
+                bookings: { savedEvents, savedVendors } 
+            });
         }
     } catch (err) {
         console.error('Error confirming booking:', err);
-        res.status(500).json({ msg: 'Server error' });
+        res.status(500).json({ msg: 'Server error', error: err.message });
     }
 }
 
@@ -69,6 +101,17 @@ async function saveBookings(bookings, bookingType) {
                         }
                         booking.eventName = eventDetails.name;
                         booking.img = eventDetails.img;
+                    }
+                } else if (bookingType === 'Vendor') {
+                    if (!booking.vendorName) {
+                        booking.vendorName = 'Untitled Vendor';
+                    }
+                    if (!booking.vendor) {
+                        const vendorDetails = await Vendor.findById(booking.vendor);
+                        if (!vendorDetails) {
+                            throw new Error(`Vendor not found with ID: ${booking.vendor}`);
+                        }
+                        booking.vendorName = vendorDetails.name;
                     }
                 }
 
