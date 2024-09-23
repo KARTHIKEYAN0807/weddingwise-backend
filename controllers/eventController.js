@@ -8,7 +8,8 @@ const HTTP_STATUS = {
     CREATED: 201,
     BAD_REQUEST: 400,
     NOT_FOUND: 404,
-    SERVER_ERROR: 500
+    SERVER_ERROR: 500,
+    UNAUTHORIZED: 401
 };
 
 // Helper functions for validation
@@ -49,7 +50,7 @@ exports.getEventById = async (req, res) => {
 // Book an event
 exports.bookEvent = async (req, res) => {
     const { eventName, name, email, date, guests } = req.body;
-    const userId = req.user ? req.user._id : null; // Assume req.user._id contains the logged-in user ID
+    const userId = req.user ? req.user._id : null;
 
     if (!userId) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({ status: 'error', msg: 'User authentication required' });
