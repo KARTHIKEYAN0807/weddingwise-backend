@@ -14,7 +14,13 @@ const VendorSchema = new mongoose.Schema({
   },
   img: {
     type: String,
-    default: '/images/default-vendor.jpg'
+    default: '/images/default-vendor.jpg',
+    validate: {
+      validator: function(v) {
+        return /\.(jpg|jpeg|png|gif)$/.test(v);  // Ensures the image file has a valid format
+      },
+      message: props => `${props.value} is not a valid image format.`
+    }
   },
   bookings: [
     {
@@ -23,5 +29,8 @@ const VendorSchema = new mongoose.Schema({
     }
   ]
 }, { timestamps: true });
+
+// Ensure unique index on name
+VendorSchema.index({ name: 1 }, { unique: true });
 
 module.exports = mongoose.model('Vendor', VendorSchema);

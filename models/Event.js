@@ -14,7 +14,13 @@ const EventSchema = new mongoose.Schema({
   },
   img: {
     type: String,
-    default: '/images/default-event.jpg'
+    default: '/images/default-event.jpg',
+    validate: {
+      validator: function(v) {
+        return /\.(jpg|jpeg|png|gif)$/.test(v);  // Ensures the image file has a valid format
+      },
+      message: props => `${props.value} is not a valid image format.`
+    }
   },
   bookings: [
     {
@@ -23,5 +29,8 @@ const EventSchema = new mongoose.Schema({
     }
   ]
 }, { timestamps: true });
+
+// Ensure unique index on name
+EventSchema.index({ name: 1 }, { unique: true });
 
 module.exports = mongoose.model('Event', EventSchema);

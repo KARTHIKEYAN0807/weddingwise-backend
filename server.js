@@ -5,13 +5,13 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
-const nodemailer = require('nodemailer'); // Import Nodemailer
+const nodemailer = require('nodemailer');
 const userRoutes = require('./routes/userRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const authRoutes = require('./routes/authRoutes');
-const { body, validationResult } = require('express-validator'); // Import for validation
+const { body, validationResult } = require('express-validator');
 
 const app = express();
 
@@ -34,14 +34,16 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Security middleware
-app.use(helmet({
-    contentSecurityPolicy: {
-        useDefaults: true,
-        directives: {
-            'img-src': ["'self'", "data:", "https:"], // Allow images only from secure sources
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            useDefaults: true,
+            directives: {
+                'img-src': ["'self'", "data:", "https:"], // Allow images only from secure sources
+            },
         },
-    },
-}));
+    })
+);
 
 // Rate limiting middleware (global)
 const limiter = rateLimit({
@@ -54,13 +56,8 @@ app.use(limiter);
 // CORS configuration
 const corsOptions = {
     origin: (origin, callback) => {
-        const allowedOrigins = [
-            'https://weddingwisebooking.netlify.app',
-            'http://localhost:5173',
-        ];
-
+        const allowedOrigins = ['https://weddingwisebooking.netlify.app', 'http://localhost:5173'];
         if (!origin) return callback(null, true); // Allow requests with no origin (like mobile apps or curl)
-
         if (allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
