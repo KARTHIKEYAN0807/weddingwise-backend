@@ -17,7 +17,7 @@ module.exports = function (req, res, next) {
         // Verify the token using the secret key
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Ensure the user information is attached to the request object
+        // Ensure the decoded token contains user information
         if (!decoded || !decoded.user) {
             console.error(`[${req.method}] ${req.url} - Decoded token does not contain user information`);
             return res.status(403).json({ success: false, message: 'Invalid token: user data not found' });
