@@ -4,14 +4,11 @@ module.exports = function (req, res, next) {
     const authHeader = req.header('Authorization');
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.warn(`Authorization header missing or improperly formatted for ${req.method} ${req.url}`);
         return res.status(401).json({ success: false, message: 'No token, authorization denied' });
     }
 
     const token = authHeader.split(' ')[1];
-
-    if (!token) {
-        return res.status(401).json({ success: false, message: 'Token is missing, authorization denied' });
-    }
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -25,7 +22,7 @@ module.exports = function (req, res, next) {
         req.user = user;
         next();
     } catch (err) {
-        console.error('Token verification failed:', err.message);
+        console.error(`Token verification failed for ${req.method} ${req.url}:`, err.message);
 
         let message = 'Token is not valid';
         if (err.name === 'TokenExpiredError') {
