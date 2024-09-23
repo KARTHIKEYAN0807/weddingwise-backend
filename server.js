@@ -56,15 +56,15 @@ const corsOptions = {
     origin: (origin, callback) => {
         const allowedOrigins = [
             'https://weddingwisebooking.netlify.app',
-            'https://master--weddingwisebooking.netlify.app',
             'http://localhost:5173',
         ];
 
         if (!origin) return callback(null, true); // Allow requests with no origin (like mobile apps or curl)
 
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        if (allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
+            console.warn(`CORS blocked for origin: ${origin}`); // Log blocked origins
             callback(new Error('Not allowed by CORS'));
         }
     },
@@ -96,7 +96,7 @@ app.use('/api/vendors', vendorRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/auth', authRoutes);
 
-// Rate limiting specifically for the contact form to avoid spam
+// Rate limiting for the contact form
 const contactLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 5, // Limit each IP to 5 contact form requests per hour
@@ -106,10 +106,10 @@ const contactLimiter = rateLimit({
 // Contact form route to handle sending emails
 app.post(
     '/api/contact',
-    contactLimiter, // Apply rate limiting to the contact form
+    contactLimiter,
     [
-        body('email').isEmail().withMessage('Please enter a valid email address'), // Email validation
-        body('message').notEmpty().withMessage('Message field cannot be empty'), // Message validation
+        body('email').isEmail().withMessage('Please enter a valid email address'),
+        body('message').notEmpty().withMessage('Message field cannot be empty'),
     ],
     async (req, res) => {
         const errors = validationResult(req);
