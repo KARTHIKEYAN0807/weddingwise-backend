@@ -2,31 +2,37 @@ const jwt = require('jsonwebtoken');
 
 module.exports = function (req, res, next) {
     try {
-        // Retrieve and trim the Authorization header from the request
+        // Retrieve the Authorization header from the request
         const authHeader = req.header('Authorization')?.trim();
 
-        // Check if the Authorization header exists and follows the 'Bearer <token>' format
+        // Validate the existence and format of the Authorization header
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            console.warn(`[${req.method}] ${req.url} - Missing or malformed Authorization header`);
-            return res.status(401).json({ success: false, message: 'No token, authorization denied' });
+            console.warn(`[${req.method}] ${req.url} - Missing or improperly formatted Authorization header`);
+            return res.status(401).json({ success: false, message: 'Authorization token missing or invalid' });
         }
 
-        // Extract the token from the Authorization header (after 'Bearer ')
+        // Extract the token from the Authorization header
         const token = authHeader.split(' ')[1];
 
-        // Verify the token using the secret key stored in environment variables
+        // Verify the token using the secret key
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Attach the decoded user information to the request object for further use
+        // Ensure the user information is attached to the request object
+        if (!decoded || !decoded.user) {
+            console.error(`[${req.method}] ${req.url} - Decoded token does not contain user information`);
+            return res.status(403).json({ success: false, message: 'Invalid token: user data not found' });
+        }
+
+        // Attach the decoded user information to the request object for further processing
         req.user = decoded.user;
 
         // Proceed to the next middleware or route handler
         next();
     } catch (err) {
-        // Log detailed token verification failure info for debugging
-        console.error(`[${req.method}] ${req.url} - Token verification failed: ${err.message}`);
+        // Log the error for debugging purposes
+        console.error(`[${req.method}] ${req.url} - JWT verification failed: ${err.message}`);
 
-        // Handle specific JWT error types and provide detailed feedback
+        // Handle specific JWT errors and return appropriate responses
         let errorMessage = 'Token is not valid';
         if (err.name === 'TokenExpiredError') {
             errorMessage = 'Token has expired, please log in again';
@@ -34,7 +40,7 @@ module.exports = function (req, res, next) {
             errorMessage = 'Invalid token, authorization denied';
         }
 
-        // Respond with a 401 Unauthorized status and the specific error message
+        // Respond with a 401 Unauthorized status and a specific error message
         return res.status(401).json({ success: false, message: errorMessage });
     }
 };
