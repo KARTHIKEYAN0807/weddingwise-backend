@@ -90,6 +90,24 @@ async function getUserBookings(req, res) {
     }
 }
 
+// Fetch booking by ID
+async function getBookingById(req, res) {
+    try {
+        const bookingId = req.params.id;
+
+        // Find the booking by its ID
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'Booking not found' });
+        }
+
+        res.status(HTTP_STATUS.OK).json({ success: true, booking });
+    } catch (err) {
+        console.error('Error fetching booking by ID:', err);
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Server error', error: err.message });
+    }
+}
+
 // Helper function to save bookings to the database
 async function saveBookings(bookings, bookingType) {
     const savedBookings = [];
@@ -190,4 +208,4 @@ function encodeHTML(str) {
     return str ? str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;') : '';
 }
 
-module.exports = { confirmBooking, getUserBookings };
+module.exports = { confirmBooking, getUserBookings, getBookingById };
