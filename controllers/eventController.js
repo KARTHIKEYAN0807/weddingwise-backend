@@ -12,7 +12,6 @@ exports.getAllEvents = async (req, res) => {
         const events = await Event.find();
         res.json({ status: 'success', data: events });
     } catch (err) {
-        console.error('Error fetching events:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while fetching events' });
     }
 };
@@ -32,7 +31,6 @@ exports.getEventById = async (req, res) => {
         }
         res.json({ status: 'success', data: event });
     } catch (err) {
-        console.error('Error fetching event:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while fetching event' });
     }
 };
@@ -72,7 +70,6 @@ exports.bookEvent = async (req, res) => {
         const savedEventBooking = await newEventBooking.save();
         res.status(201).json({ status: 'success', data: savedEventBooking });
     } catch (err) {
-        console.error('Error booking event:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while booking event' });
     }
 };
@@ -111,7 +108,6 @@ exports.updateEventBooking = async (req, res) => {
 
         res.json({ status: 'success', data: updatedBooking });
     } catch (err) {
-        console.error('Error updating event booking:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while updating event booking' });
     }
 };
@@ -133,7 +129,6 @@ exports.deleteEventBooking = async (req, res) => {
         await Booking.findByIdAndDelete(eventBookingId);
         res.json({ status: 'success', msg: 'Event booking deleted' });
     } catch (err) {
-        console.error('Error deleting event booking:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while deleting event booking' });
     }
 };
@@ -151,7 +146,6 @@ exports.createEvent = async (req, res) => {
         const savedEvent = await newEvent.save();
         res.status(201).json({ status: 'success', data: savedEvent });
     } catch (err) {
-        console.error('Error creating event:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while creating event' });
     }
 };
@@ -182,7 +176,6 @@ exports.updateEvent = async (req, res) => {
 
         res.json({ status: 'success', data: updatedEvent });
     } catch (err) {
-        console.error('Error updating event:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while updating event' });
     }
 };
@@ -204,7 +197,6 @@ exports.deleteEvent = async (req, res) => {
         await Event.findByIdAndDelete(eventId);
         res.json({ status: 'success', msg: 'Event deleted' });
     } catch (err) {
-        console.error('Error deleting event:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while deleting event' });
     }
 };

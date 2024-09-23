@@ -12,7 +12,6 @@ exports.getAllVendors = async (req, res) => {
         const vendors = await Vendor.find();
         res.json({ status: 'success', data: vendors });
     } catch (err) {
-        console.error('Error fetching vendors:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while fetching vendors' });
     }
 };
@@ -32,7 +31,6 @@ exports.getVendorById = async (req, res) => {
         }
         res.json({ status: 'success', data: vendor });
     } catch (err) {
-        console.error('Error fetching vendor:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while fetching vendor' });
     }
 };
@@ -71,7 +69,6 @@ exports.bookVendor = async (req, res) => {
         const savedVendorBooking = await newVendorBooking.save();
         res.status(201).json({ status: 'success', data: savedVendorBooking });
     } catch (err) {
-        console.error('Error booking vendor:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while booking vendor' });
     }
 };
@@ -110,7 +107,6 @@ exports.updateVendorBooking = async (req, res) => {
 
         res.json({ status: 'success', data: updatedBooking });
     } catch (err) {
-        console.error('Error updating vendor booking:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while updating vendor booking' });
     }
 };
@@ -132,28 +128,7 @@ exports.deleteVendorBooking = async (req, res) => {
         await Booking.findByIdAndDelete(vendorBookingId);
         res.json({ status: 'success', msg: 'Vendor booking deleted' });
     } catch (err) {
-        console.error('Error deleting vendor booking:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while deleting vendor booking' });
-    }
-};
-
-// Get all bookings for a vendor
-exports.getVendorBookings = async (req, res) => {
-    const { vendorId } = req.query;
-
-    if (!vendorId || !mongoose.Types.ObjectId.isValid(vendorId)) {
-        return res.status(400).json({ status: 'error', msg: 'Invalid or missing vendor ID' });
-    }
-
-    try {
-        const vendor = await Vendor.findById(vendorId).populate('bookings');
-        if (!vendor) {
-            return res.status(404).json({ status: 'error', msg: 'Vendor not found' });
-        }
-        res.status(200).json({ status: 'success', data: vendor.bookings });
-    } catch (err) {
-        console.error('Error fetching vendor bookings:', err);
-        res.status(500).json({ status: 'error', msg: 'Server error while fetching vendor bookings' });
     }
 };
 
@@ -170,7 +145,6 @@ exports.createVendor = async (req, res) => {
         const savedVendor = await newVendor.save();
         res.status(201).json({ status: 'success', data: savedVendor });
     } catch (err) {
-        console.error('Error creating vendor:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while creating vendor' });
     }
 };
@@ -197,7 +171,6 @@ exports.updateVendor = async (req, res) => {
         );
         res.json({ status: 'success', data: updatedVendor });
     } catch (err) {
-        console.error('Error updating vendor:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while updating vendor' });
     }
 };
@@ -219,7 +192,6 @@ exports.deleteVendor = async (req, res) => {
         await Vendor.findByIdAndDelete(vendorId);
         res.json({ status: 'success', msg: 'Vendor deleted' });
     } catch (err) {
-        console.error('Error deleting vendor:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while deleting vendor' });
     }
 };
