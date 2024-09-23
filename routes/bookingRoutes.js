@@ -20,4 +20,5 @@ router.all('*', (req, res) => {
     res.status(404).json({ status: 'error', message: 'Booking route not found' });
 });
 
+// Export the router
 module.exports = router;

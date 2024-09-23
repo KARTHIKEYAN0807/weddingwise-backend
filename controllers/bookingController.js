@@ -105,42 +105,51 @@ async function saveBookings(bookings, bookingType) {
 
     for (const booking of bookings) {
         try {
+            let savedBooking;
+
             if (!booking._id || booking._id.startsWith('local-')) {
-                // Save new bookings
-                if (bookingType === 'Event') {
-                    if (!booking.eventName) booking.eventName = 'Untitled Event';
-                    if (!booking.event) {
-                        const eventDetails = await Event.findById(booking.event);
-                        if (!eventDetails) throw new Error(`Event not found with ID: ${booking.event}`);
-                        booking.eventName = eventDetails.name;
-                        booking.img = eventDetails.img;
-                    }
-                } else if (bookingType === 'Vendor') {
-                    if (!booking.vendorName) booking.vendorName = 'Untitled Vendor';
-                    if (!booking.vendor) {
-                        const vendorDetails = await Vendor.findById(booking.vendor);
-                        if (!vendorDetails) throw new Error(`Vendor not found with ID: ${booking.vendor}`);
-                        booking.vendorName = vendorDetails.name;
-                    }
-                }
-
-                if (booking._id && booking._id.startsWith('local-')) delete booking._id;
-
-                const savedBooking = new Booking({ ...booking, bookingType });
-                await savedBooking.save();
-                savedBookings.push(savedBooking);
+                // Handle new bookings
+                savedBooking = await handleNewBooking(booking, bookingType);
             } else {
                 // Fetch existing bookings
-                const existingBooking = await Booking.findById(booking._id);
-                if (!existingBooking) throw new Error(`Booking not found with ID: ${booking._id}`);
-                savedBookings.push(existingBooking);
+                savedBooking = await Booking.findById(booking._id);
+                if (!savedBooking) throw new Error(`Booking not found with ID: ${booking._id}`);
             }
+
+            savedBookings.push(savedBooking);
         } catch (err) {
             console.error('Error saving booking:', err);
             throw err;
         }
     }
+
     return savedBookings;
+}
+
+// Helper function to handle new bookings
+async function handleNewBooking(booking, bookingType) {
+    if (bookingType === 'Event') {
+        if (!booking.eventName) booking.eventName = 'Untitled Event';
+        if (!booking.event) {
+            const eventDetails = await Event.findById(booking.event);
+            if (!eventDetails) throw new Error(`Event not found with ID: ${booking.event}`);
+            booking.eventName = eventDetails.name;
+            booking.img = eventDetails.img;
+        }
+    } else if (bookingType === 'Vendor') {
+        if (!booking.vendorName) booking.vendorName = 'Untitled Vendor';
+        if (!booking.vendor) {
+            const vendorDetails = await Vendor.findById(booking.vendor);
+            if (!vendorDetails) throw new Error(`Vendor not found with ID: ${booking.vendor}`);
+            booking.vendorName = vendorDetails.name;
+        }
+    }
+
+    if (booking._id && booking._id.startsWith('local-')) delete booking._id;
+
+    const newBooking = new Booking({ ...booking, bookingType });
+    await newBooking.save();
+    return newBooking;
 }
 
 // Helper function to generate email HTML content
