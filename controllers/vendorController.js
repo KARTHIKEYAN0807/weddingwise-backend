@@ -140,6 +140,26 @@ exports.deleteVendorBooking = async (req, res) => {
     }
 };
 
+// Get all bookings for a vendor
+exports.getVendorBookings = async (req, res) => {
+    const { vendorId } = req.query;
+
+    if (!vendorId || !mongoose.Types.ObjectId.isValid(vendorId)) {
+        return res.status(400).json({ status: 'error', msg: 'Invalid or missing vendor ID' });
+    }
+
+    try {
+        const vendor = await Vendor.findById(vendorId).populate('bookings');
+        if (!vendor) {
+            return res.status(404).json({ status: 'error', msg: 'Vendor not found' });
+        }
+        res.status(200).json({ status: 'success', data: vendor.bookings });
+    } catch (err) {
+        console.error('Error fetching vendor bookings:', err);
+        res.status(500).json({ status: 'error', msg: 'Server error while fetching vendor bookings' });
+    }
+};
+
 // Create a new vendor
 exports.createVendor = async (req, res) => {
     const { name, description, img } = req.body;
