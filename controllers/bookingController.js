@@ -21,23 +21,6 @@ async function confirmBooking(req, res) {
             return res.status(400).json({ msg: 'No events or vendors provided for booking.' });
         }
 
-        // Validate event and vendor data
-        if (bookedEvents) {
-            bookedEvents.forEach(event => {
-                if (!event.event || !mongoose.Types.ObjectId.isValid(event.event)) {
-                    throw new Error('Invalid event ID');
-                }
-            });
-        }
-
-        if (bookedVendors) {
-            bookedVendors.forEach(vendor => {
-                if (!vendor.vendor || !mongoose.Types.ObjectId.isValid(vendor.vendor)) {
-                    throw new Error('Invalid vendor ID');
-                }
-            });
-        }
-
         // Save the events and vendors to the database
         const savedEvents = await saveBookings(bookedEvents || [], 'Event');
         const savedVendors = await saveBookings(bookedVendors || [], 'Vendor');
@@ -66,18 +49,42 @@ async function confirmBooking(req, res) {
             res.status(200).json({
                 status: 'success',
                 message: 'Booking confirmed and email sent.',
-                bookings: { savedEvents, savedVendors }
+                bookings: { savedEvents, savedVendors },
             });
         } catch (emailError) {
             console.error('Error sending confirmation email:', emailError);
             res.status(500).json({
                 status: 'warning',
                 message: 'Booking confirmed, but error sending confirmation email.',
-                bookings: { savedEvents, savedVendors }
+                bookings: { savedEvents, savedVendors },
             });
         }
     } catch (err) {
         console.error('Error confirming booking:', err);
+        res.status(500).json({ msg: 'Server error', error: err.message });
+    }
+}
+
+// Fetch bookings for the authenticated user
+async function getUserBookings(req, res) {
+    try {
+        // Ensure the user is authenticated
+        if (!req.user || !req.user.email) {
+            return res.status(401).json({ msg: 'User not authenticated' });
+        }
+
+        const userEmail = req.user.email;
+
+        // Fetch bookings for the user
+        const userBookings = await Booking.find({ email: userEmail });
+
+        if (!userBookings || userBookings.length === 0) {
+            return res.status(404).json({ msg: 'No bookings found for the user' });
+        }
+
+        res.status(200).json({ bookings: userBookings });
+    } catch (err) {
+        console.error('Error fetching user bookings:', err);
         res.status(500).json({ msg: 'Server error', error: err.message });
     }
 }
@@ -173,4 +180,4 @@ function encodeHTML(str) {
     return str ? str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;') : '';
 }
 
-module.exports = { confirmBooking };
+module.exports = { confirmBooking, getUserBookings };
