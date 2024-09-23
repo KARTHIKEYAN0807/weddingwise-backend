@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Vendor schema definition
 const VendorSchema = new mongoose.Schema({
     name: { 
         type: String, 

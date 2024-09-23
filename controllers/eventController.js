@@ -41,7 +41,6 @@ exports.getEventById = async (req, res) => {
 exports.bookEvent = async (req, res) => {
     const { eventName, name, email, date, guests } = req.body;
 
-    // Validate input
     if (!eventName || !name || !email || !date || !guests) {
         return res.status(400).json({ status: 'error', msg: 'All fields are required: eventName, name, email, date, and guests.' });
     }
@@ -60,7 +59,6 @@ exports.bookEvent = async (req, res) => {
             return res.status(404).json({ status: 'error', msg: 'Event not found' });
         }
 
-        // Create and save booking
         const newEventBooking = new Booking({
             bookingType: 'Event',
             event: event._id,
@@ -88,7 +86,6 @@ exports.updateEventBooking = async (req, res) => {
         return res.status(400).json({ status: 'error', msg: 'Invalid event booking ID format' });
     }
 
-    // Validate input
     if (!name || !email || !date || !eventName || !guests) {
         return res.status(400).json({ status: 'error', msg: 'All fields are required: name, email, date, eventName, and guests.' });
     }

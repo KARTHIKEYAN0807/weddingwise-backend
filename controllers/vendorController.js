@@ -41,7 +41,6 @@ exports.getVendorById = async (req, res) => {
 exports.bookVendor = async (req, res) => {
     const { vendorName, name, email, date } = req.body;
 
-    // Validate input
     if (!vendorName || !name || !email || !date) {
         return res.status(400).json({ status: 'error', msg: 'All fields are required: vendorName, name, email, and date.' });
     }
@@ -60,7 +59,6 @@ exports.bookVendor = async (req, res) => {
             return res.status(404).json({ status: 'error', msg: 'Vendor not found' });
         }
 
-        // Create and save booking
         const newVendorBooking = new Booking({
             bookingType: 'Vendor',
             vendor: vendor._id,
@@ -87,7 +85,6 @@ exports.updateVendorBooking = async (req, res) => {
         return res.status(400).json({ status: 'error', msg: 'Invalid vendor booking ID format' });
     }
 
-    // Validate input
     if (!name || !email || !date || !vendorName) {
         return res.status(400).json({ status: 'error', msg: 'All fields are required: name, email, date, and vendorName.' });
     }
