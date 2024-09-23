@@ -10,7 +10,7 @@ const userRoutes = require('./routes/userRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
-const authRoutes = require('./routes/authRoutes'); // Import the authRoutes
+const authRoutes = require('./routes/authRoutes'); // Import authRoutes
 const { body, validationResult } = require('express-validator'); // Import for validation
 
 const app = express();
@@ -53,9 +53,8 @@ const corsOptions = {
             'http://localhost:5173',
         ];
 
-        // Allow requests with no origin, like mobile apps or curl requests
-        if (!origin) return callback(null, true);
-
+        if (!origin) return callback(null, true); // Allow requests with no origin (like mobile apps or curl)
+        
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
@@ -90,7 +89,7 @@ app.use('/api/vendors', vendorRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/auth', authRoutes);
 
-// Rate limiting specifically for contact form to avoid spam
+// Rate limiting specifically for the contact form to avoid spam
 const contactLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 5, // Limit each IP to 5 contact form requests per hour
@@ -115,10 +114,10 @@ app.post(
 
         // Configure Nodemailer transporter
         let transporter = nodemailer.createTransport({
-            service: 'gmail', // or any email provider
+            service: 'gmail',
             auth: {
-                user: process.env.EMAIL_USER, // your email
-                pass: process.env.EMAIL_PASS, // your email password
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
             },
         });
 

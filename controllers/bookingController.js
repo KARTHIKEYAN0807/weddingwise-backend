@@ -1,14 +1,14 @@
 const Booking = require('../models/Booking');
 const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
-const Event = require('../models/Event'); // Import Event model
-const Vendor = require('../models/Vendor'); // Import Vendor model
+const Event = require('../models/Event');
+const Vendor = require('../models/Vendor');
 
 // Confirm booking
 async function confirmBooking(req, res) {
     try {
         const { bookedEvents, bookedVendors } = req.body;
-        
+
         // Ensure the user is authenticated
         if (!req.user || !req.user.email) {
             return res.status(401).json({ msg: 'User not authenticated' });
@@ -38,7 +38,7 @@ async function confirmBooking(req, res) {
             });
         }
 
-        // Save the events and vendors to the database if not already saved
+        // Save the events and vendors to the database
         const savedEvents = await saveBookings(bookedEvents || [], 'Event');
         const savedVendors = await saveBookings(bookedVendors || [], 'Vendor');
 
@@ -63,17 +63,17 @@ async function confirmBooking(req, res) {
 
         try {
             await transporter.sendMail(mailOptions);
-            res.status(200).json({ 
-                status: 'success', 
-                message: 'Booking confirmed and email sent.', 
-                bookings: { savedEvents, savedVendors } 
+            res.status(200).json({
+                status: 'success',
+                message: 'Booking confirmed and email sent.',
+                bookings: { savedEvents, savedVendors }
             });
         } catch (emailError) {
             console.error('Error sending confirmation email:', emailError);
-            res.status(500).json({ 
-                status: 'warning', 
-                message: 'Booking confirmed, but error sending confirmation email.', 
-                bookings: { savedEvents, savedVendors } 
+            res.status(500).json({
+                status: 'warning',
+                message: 'Booking confirmed, but error sending confirmation email.',
+                bookings: { savedEvents, savedVendors }
             });
         }
     } catch (err) {
@@ -82,58 +82,45 @@ async function confirmBooking(req, res) {
     }
 }
 
-// Helper function to save bookings to the database if not already saved
+// Helper function to save bookings to the database
 async function saveBookings(bookings, bookingType) {
     const savedBookings = [];
 
     for (const booking of bookings) {
         try {
-            // If the booking doesn't have an _id or if it starts with 'local-', treat it as a new booking
             if (!booking._id || booking._id.startsWith('local-')) {
+                // Save new bookings
                 if (bookingType === 'Event') {
-                    if (!booking.eventName) {
-                        booking.eventName = 'Untitled Event';
-                    }
+                    if (!booking.eventName) booking.eventName = 'Untitled Event';
                     if (!booking.event) {
                         const eventDetails = await Event.findById(booking.event);
-                        if (!eventDetails) {
-                            throw new Error(`Event not found with ID: ${booking.event}`);
-                        }
+                        if (!eventDetails) throw new Error(`Event not found with ID: ${booking.event}`);
                         booking.eventName = eventDetails.name;
                         booking.img = eventDetails.img;
                     }
                 } else if (bookingType === 'Vendor') {
-                    if (!booking.vendorName) {
-                        booking.vendorName = 'Untitled Vendor';
-                    }
+                    if (!booking.vendorName) booking.vendorName = 'Untitled Vendor';
                     if (!booking.vendor) {
                         const vendorDetails = await Vendor.findById(booking.vendor);
-                        if (!vendorDetails) {
-                            throw new Error(`Vendor not found with ID: ${booking.vendor}`);
-                        }
+                        if (!vendorDetails) throw new Error(`Vendor not found with ID: ${booking.vendor}`);
                         booking.vendorName = vendorDetails.name;
                     }
                 }
 
-                // Remove temporary _id if it exists and save the booking
-                if (booking._id && booking._id.startsWith('local-')) {
-                    delete booking._id;
-                }
+                if (booking._id && booking._id.startsWith('local-')) delete booking._id;
 
                 const savedBooking = new Booking({ ...booking, bookingType });
                 await savedBooking.save();
                 savedBookings.push(savedBooking);
             } else {
-                // Fetch existing bookings if they already exist
+                // Fetch existing bookings
                 const existingBooking = await Booking.findById(booking._id);
-                if (!existingBooking) {
-                    throw new Error(`Booking not found with ID: ${booking._id}`);
-                }
+                if (!existingBooking) throw new Error(`Booking not found with ID: ${booking._id}`);
                 savedBookings.push(existingBooking);
             }
         } catch (err) {
             console.error('Error saving booking:', err);
-            throw err; // Throw error to prevent further processing
+            throw err;
         }
     }
     return savedBookings;
