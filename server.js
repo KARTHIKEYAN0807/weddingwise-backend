@@ -10,7 +10,7 @@ const userRoutes = require('./routes/userRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
-const authRoutes = require('./routes/authRoutes'); // Import authRoutes
+const authRoutes = require('./routes/authRoutes');
 const { body, validationResult } = require('express-validator'); // Import for validation
 
 const app = express();
@@ -34,7 +34,14 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        useDefaults: true,
+        directives: {
+            'img-src': ["'self'", "data:", "https:"], // Allow images only from secure sources
+        },
+    },
+}));
 
 // Rate limiting middleware (global)
 const limiter = rateLimit({
@@ -54,7 +61,7 @@ const corsOptions = {
         ];
 
         if (!origin) return callback(null, true); // Allow requests with no origin (like mobile apps or curl)
-        
+
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
