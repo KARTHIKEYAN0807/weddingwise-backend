@@ -13,6 +13,10 @@ const HTTP_STATUS = {
     UNAUTHORIZED: 401,
 };
 
+// Email settings
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_SUBJECT = 'Booking Confirmation - WeddingWise';
+
 // Confirm booking
 async function confirmBooking(req, res) {
     try {
@@ -41,35 +45,26 @@ async function confirmBooking(req, res) {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: process.env.EMAIL_USER,
+                user: EMAIL_USER,
                 pass: process.env.EMAIL_PASS,
             },
         });
 
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: EMAIL_USER,
             to: userEmail,
-            subject: 'Booking Confirmation - WeddingWise',
+            subject: EMAIL_SUBJECT,
             html: htmlContent,
         };
 
-        try {
-            await transporter.sendMail(mailOptions);
-            res.status(HTTP_STATUS.OK).json({
-                success: true,
-                message: 'Booking confirmed and email sent.',
-                bookings: { savedEvents, savedVendors },
-            });
-        } catch (emailError) {
-            console.error('Error sending confirmation email:', emailError);
-            res.status(HTTP_STATUS.SERVER_ERROR).json({
-                success: false,
-                message: 'Booking confirmed, but error sending confirmation email.',
-                bookings: { savedEvents, savedVendors },
-            });
-        }
+        await transporter.sendMail(mailOptions);
+        res.status(HTTP_STATUS.OK).json({
+            success: true,
+            message: 'Booking confirmed and email sent.',
+            bookings: { savedEvents, savedVendors },
+        });
     } catch (err) {
-        console.error('Error confirming booking:', err);
+        console.error('Error confirming booking:', err); // Log the error
         res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Server error', error: err.message });
     }
 }
@@ -90,7 +85,7 @@ async function getUserBookings(req, res) {
 
         res.status(HTTP_STATUS.OK).json({ success: true, bookings: userBookings });
     } catch (err) {
-        console.error('Error fetching user bookings:', err);
+        console.error('Error fetching user bookings:', err); // Log the error
         res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Server error', error: err.message });
     }
 }
@@ -114,7 +109,7 @@ async function saveBookings(bookings, bookingType) {
 
             savedBookings.push(savedBooking);
         } catch (err) {
-            console.error('Error saving booking:', err);
+            console.error('Error saving booking:', err); // Log the error
             throw err;
         }
     }

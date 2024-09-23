@@ -3,8 +3,11 @@ const router = express.Router();
 const bookingController = require('../controllers/bookingController');
 const authMiddleware = require('../middleware/authMiddleware');
 
+// Log the bookingController to verify function availability
+console.log('Booking Controller:', bookingController);
+
 // POST /api/bookings/confirm-booking
-// Confirm event and vendor bookings. Requires user authentication.
+// Confirm event and vendor bookings for the authenticated user.
 router.post('/confirm-booking', authMiddleware, bookingController.confirmBooking);
 
 // GET /api/bookings
@@ -12,7 +15,7 @@ router.post('/confirm-booking', authMiddleware, bookingController.confirmBooking
 router.get('/', authMiddleware, bookingController.getUserBookings);
 
 // GET /api/bookings/:id
-// Fetch a specific booking by its ID. Requires user authentication.
+// Fetch a specific booking by its ID for the authenticated user.
 router.get('/:id', authMiddleware, bookingController.getBookingById);
 
 // Catch-all route for invalid routes under /api/bookings
