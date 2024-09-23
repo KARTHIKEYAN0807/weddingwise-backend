@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const vendorController = require('../controllers/vendorController');
+const vendorController = require('../controllers/vendorController');  // Correct import
 const authMiddleware = require('../middleware/authMiddleware');
 
 // Vendor management routes (admin access required)
