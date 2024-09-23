@@ -57,15 +57,20 @@ async function confirmBooking(req, res) {
             html: htmlContent,
         };
 
-        await transporter.sendMail(mailOptions);
-        res.status(HTTP_STATUS.OK).json({
+        await transporter.sendMail(mailOptions).catch(err => {
+            console.error('Error sending email:', err);
+            return res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Error sending confirmation email' });
+        });
+
+        return res.status(HTTP_STATUS.OK).json({
             success: true,
             message: 'Booking confirmed and email sent.',
             bookings: { savedEvents, savedVendors },
         });
+
     } catch (err) {
         console.error('Error confirming booking:', err); // Log the error
-        res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Server error', error: err.message });
+        return res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Server error', error: err.message });
     }
 }
 
@@ -83,10 +88,10 @@ async function getUserBookings(req, res) {
             return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'No bookings found for the user' });
         }
 
-        res.status(HTTP_STATUS.OK).json({ success: true, bookings: userBookings });
+        return res.status(HTTP_STATUS.OK).json({ success: true, bookings: userBookings });
     } catch (err) {
         console.error('Error fetching user bookings:', err); // Log the error
-        res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Server error', error: err.message });
+        return res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Server error', error: err.message });
     }
 }
 
@@ -101,10 +106,10 @@ async function getBookingById(req, res) {
             return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'Booking not found' });
         }
 
-        res.status(HTTP_STATUS.OK).json({ success: true, booking });
+        return res.status(HTTP_STATUS.OK).json({ success: true, booking });
     } catch (err) {
         console.error('Error fetching booking by ID:', err);
-        res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Server error', error: err.message });
+        return res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Server error', error: err.message });
     }
 }
 
