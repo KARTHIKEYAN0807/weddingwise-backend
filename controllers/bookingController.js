@@ -4,6 +4,16 @@ const mongoose = require('mongoose');
 const Event = require('../models/Event');
 const Vendor = require('../models/Vendor');
 
+// Constants for HTTP status codes
+const HTTP_STATUS = {
+    OK: 200,
+    CREATED: 201,
+    BAD_REQUEST: 400,
+    NOT_FOUND: 404,
+    SERVER_ERROR: 500,
+    UNAUTHORIZED: 401
+};
+
 // Confirm booking
 async function confirmBooking(req, res) {
     try {
@@ -11,14 +21,14 @@ async function confirmBooking(req, res) {
 
         // Ensure the user is authenticated
         if (!req.user || !req.user.email) {
-            return res.status(401).json({ msg: 'User not authenticated' });
+            return res.status(HTTP_STATUS.UNAUTHORIZED).json({ msg: 'User not authenticated' });
         }
 
         const userEmail = req.user.email;
 
         // Validate that there are events or vendors to book
         if ((!bookedEvents || bookedEvents.length === 0) && (!bookedVendors || bookedVendors.length === 0)) {
-            return res.status(400).json({ msg: 'No events or vendors provided for booking.' });
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ msg: 'No events or vendors provided for booking.' });
         }
 
         // Save the events and vendors to the database
@@ -46,14 +56,14 @@ async function confirmBooking(req, res) {
 
         try {
             await transporter.sendMail(mailOptions);
-            res.status(200).json({
+            res.status(HTTP_STATUS.OK).json({
                 status: 'success',
                 message: 'Booking confirmed and email sent.',
                 bookings: { savedEvents, savedVendors },
             });
         } catch (emailError) {
             console.error('Error sending confirmation email:', emailError);
-            res.status(500).json({
+            res.status(HTTP_STATUS.SERVER_ERROR).json({
                 status: 'warning',
                 message: 'Booking confirmed, but error sending confirmation email.',
                 bookings: { savedEvents, savedVendors },
@@ -61,7 +71,7 @@ async function confirmBooking(req, res) {
         }
     } catch (err) {
         console.error('Error confirming booking:', err);
-        res.status(500).json({ msg: 'Server error', error: err.message });
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ msg: 'Server error', error: err.message });
     }
 }
 
@@ -70,7 +80,7 @@ async function getUserBookings(req, res) {
     try {
         // Ensure the user is authenticated
         if (!req.user || !req.user.email) {
-            return res.status(401).json({ msg: 'User not authenticated' });
+            return res.status(HTTP_STATUS.UNAUTHORIZED).json({ msg: 'User not authenticated' });
         }
 
         const userEmail = req.user.email;
@@ -79,13 +89,13 @@ async function getUserBookings(req, res) {
         const userBookings = await Booking.find({ email: userEmail });
 
         if (!userBookings || userBookings.length === 0) {
-            return res.status(404).json({ msg: 'No bookings found for the user' });
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ msg: 'No bookings found for the user' });
         }
 
-        res.status(200).json({ bookings: userBookings });
+        res.status(HTTP_STATUS.OK).json({ bookings: userBookings });
     } catch (err) {
         console.error('Error fetching user bookings:', err);
-        res.status(500).json({ msg: 'Server error', error: err.message });
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ msg: 'Server error', error: err.message });
     }
 }
 

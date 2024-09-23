@@ -57,7 +57,6 @@ exports.bookEvent = async (req, res) => {
     }
 
     if (!eventName || !name || !email || !date || !guests) {
-        console.error('Missing required fields:', req.body);
         return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'All fields are required: eventName, name, email, date, and guests.' });
     }
 
@@ -87,7 +86,6 @@ exports.bookEvent = async (req, res) => {
         });
 
         const savedEventBooking = await newEventBooking.save();
-        console.log('Event booking saved:', savedEventBooking);
         res.status(HTTP_STATUS.CREATED).json({ status: 'success', data: savedEventBooking });
     } catch (err) {
         console.error('Error booking event:', err);

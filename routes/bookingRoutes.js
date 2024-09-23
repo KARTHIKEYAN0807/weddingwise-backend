@@ -11,4 +11,14 @@ router.post('/confirm-booking', authMiddleware, bookingController.confirmBooking
 // Fetch all bookings (events and vendors) for the authenticated user.
 router.get('/bookings', authMiddleware, bookingController.getUserBookings);
 
+// Optionally: Add a route to fetch a specific booking by ID if needed.
+// GET /api/bookings/:id
+// Fetch a specific booking by its ID. Requires user authentication.
+router.get('/bookings/:id', authMiddleware, bookingController.getBookingById);
+
+// Catch-all route for invalid routes
+router.all('*', (req, res) => {
+    res.status(404).json({ status: 'error', message: 'Route not found' });
+});
+
 module.exports = router;
