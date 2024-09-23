@@ -10,7 +10,7 @@ const isValidFutureDate = (date) => !isNaN(Date.parse(date)) && new Date(date) >
 exports.getAllEvents = async (req, res) => {
     try {
         const events = await Event.find();
-        res.status(200).json({ status: 'success', data: events });
+        res.json({ status: 'success', data: events });
     } catch (err) {
         console.error('Error fetching events:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while fetching events' });
@@ -30,23 +30,20 @@ exports.getEventById = async (req, res) => {
         if (!event) {
             return res.status(404).json({ status: 'error', msg: 'Event not found' });
         }
-        res.status(200).json({ status: 'success', data: event });
+        res.json({ status: 'success', data: event });
     } catch (err) {
         console.error('Error fetching event:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while fetching event' });
     }
 };
 
-// Book an event using eventId
+// Book an event
 exports.bookEvent = async (req, res) => {
-    const { eventId, name, email, guests, date } = req.body;
+    const { eventName, name, email, date, guests } = req.body;
 
-    if (!eventId || !name || !email || !guests || !date) {
-        return res.status(400).json({ status: 'error', msg: 'All fields are required: eventId, name, email, guests, and date.' });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(eventId)) {
-        return res.status(400).json({ status: 'error', msg: 'Invalid event ID format' });
+    // Validate input
+    if (!eventName || !name || !email || !date || !guests) {
+        return res.status(400).json({ status: 'error', msg: 'All fields are required: eventName, name, email, date, and guests.' });
     }
 
     if (!isValidEmail(email)) {
@@ -58,7 +55,7 @@ exports.bookEvent = async (req, res) => {
     }
 
     try {
-        const event = await Event.findById(eventId);
+        const event = await Event.findOne({ name: eventName });
         if (!event) {
             return res.status(404).json({ status: 'error', msg: 'Event not found' });
         }
@@ -69,9 +66,9 @@ exports.bookEvent = async (req, res) => {
             event: event._id,
             name,
             email,
+            date,
             guests,
-            eventName: event.name, // Ensure eventName is saved correctly
-            date
+            eventName: event.name,
         });
 
         const savedEventBooking = await newEventBooking.save();
@@ -91,6 +88,7 @@ exports.updateEventBooking = async (req, res) => {
         return res.status(400).json({ status: 'error', msg: 'Invalid event booking ID format' });
     }
 
+    // Validate input
     if (!name || !email || !date || !eventName || !guests) {
         return res.status(400).json({ status: 'error', msg: 'All fields are required: name, email, date, eventName, and guests.' });
     }
@@ -114,7 +112,7 @@ exports.updateEventBooking = async (req, res) => {
             return res.status(404).json({ status: 'error', msg: 'Event booking not found' });
         }
 
-        res.status(200).json({ status: 'success', data: updatedBooking });
+        res.json({ status: 'success', data: updatedBooking });
     } catch (err) {
         console.error('Error updating event booking:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while updating event booking' });
@@ -136,7 +134,7 @@ exports.deleteEventBooking = async (req, res) => {
         }
 
         await Booking.findByIdAndDelete(eventBookingId);
-        res.status(200).json({ status: 'success', msg: 'Event booking deleted' });
+        res.json({ status: 'success', msg: 'Event booking deleted' });
     } catch (err) {
         console.error('Error deleting event booking:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while deleting event booking' });
@@ -147,8 +145,8 @@ exports.deleteEventBooking = async (req, res) => {
 exports.createEvent = async (req, res) => {
     const { name, description, img } = req.body;
 
-    if (!name) {
-        return res.status(400).json({ status: 'error', msg: 'Event name is required' });
+    if (!name || !description || !img) {
+        return res.status(400).json({ status: 'error', msg: 'Event name, description, and image are required' });
     }
 
     try {
@@ -170,8 +168,8 @@ exports.updateEvent = async (req, res) => {
         return res.status(400).json({ status: 'error', msg: 'Invalid event ID format' });
     }
 
-    if (!name) {
-        return res.status(400).json({ status: 'error', msg: 'Event name is required' });
+    if (!name || !description || !img) {
+        return res.status(400).json({ status: 'error', msg: 'Event name, description, and image are required' });
     }
 
     try {
@@ -185,7 +183,7 @@ exports.updateEvent = async (req, res) => {
             return res.status(404).json({ status: 'error', msg: 'Event not found' });
         }
 
-        res.status(200).json({ status: 'success', data: updatedEvent });
+        res.json({ status: 'success', data: updatedEvent });
     } catch (err) {
         console.error('Error updating event:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while updating event' });
@@ -207,7 +205,7 @@ exports.deleteEvent = async (req, res) => {
         }
 
         await Event.findByIdAndDelete(eventId);
-        res.status(200).json({ status: 'success', msg: 'Event deleted' });
+        res.json({ status: 'success', msg: 'Event deleted' });
     } catch (err) {
         console.error('Error deleting event:', err);
         res.status(500).json({ status: 'error', msg: 'Server error while deleting event' });
