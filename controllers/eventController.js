@@ -70,7 +70,7 @@ exports.bookEvent = async (req, res) => {
             name,
             email,
             guests,
-            eventName: event.name,
+            eventName: event.name, // Ensure eventName is saved correctly
             date
         });
 
