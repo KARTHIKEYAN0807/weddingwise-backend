@@ -1,6 +1,5 @@
 const Booking = require('../models/Booking');
 const nodemailer = require('nodemailer');
-const mongoose = require('mongoose');
 const Event = require('../models/Event');
 const Vendor = require('../models/Vendor');
 
@@ -78,14 +77,11 @@ async function confirmBooking(req, res) {
 // Fetch bookings for the authenticated user
 async function getUserBookings(req, res) {
     try {
-        // Ensure the user is authenticated
         if (!req.user || !req.user.email) {
             return res.status(HTTP_STATUS.UNAUTHORIZED).json({ msg: 'User not authenticated' });
         }
 
         const userEmail = req.user.email;
-
-        // Fetch bookings for the user
         const userBookings = await Booking.find({ email: userEmail });
 
         if (!userBookings || userBookings.length === 0) {
