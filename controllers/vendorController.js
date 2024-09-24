@@ -12,41 +12,6 @@ const HTTP_STATUS = {
     UNAUTHORIZED: 401,
 };
 
-// Helper functions for validation
-const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-const isValidFutureDate = (date) => !isNaN(Date.parse(date)) && new Date(date) > new Date();
-
-// Get all vendors
-exports.getAllVendors = async (req, res) => {
-    try {
-        const vendors = await Vendor.find();
-        res.status(HTTP_STATUS.OK).json({ status: 'success', data: vendors });
-    } catch (err) {
-        console.error('Error fetching vendors:', err);
-        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while fetching vendors' });
-    }
-};
-
-// Get a single vendor by ID
-exports.getVendorById = async (req, res) => {
-    const vendorId = req.params.id;
-
-    if (!mongoose.Types.ObjectId.isValid(vendorId)) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Invalid vendor ID format' });
-    }
-
-    try {
-        const vendor = await Vendor.findById(vendorId);
-        if (!vendor) {
-            return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Vendor not found' });
-        }
-        res.status(HTTP_STATUS.OK).json({ status: 'success', data: vendor });
-    } catch (err) {
-        console.error('Error fetching vendor:', err);
-        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while fetching vendor' });
-    }
-};
-
 // Get all vendor bookings for authenticated user
 exports.getAllVendorBookings = async (req, res) => {
     try {
@@ -182,72 +147,5 @@ exports.deleteVendorBooking = async (req, res) => {
     } catch (err) {
         console.error('Error deleting vendor booking:', err);
         res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while deleting vendor booking' });
-    }
-};
-
-// Create a new vendor
-exports.createVendor = async (req, res) => {
-    const { name, description, img } = req.body;
-
-    if (!name) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Vendor name is required' });
-    }
-
-    try {
-        const newVendor = new Vendor({ name, description, img });
-        const savedVendor = await newVendor.save();
-        res.status(HTTP_STATUS.CREATED).json({ status: 'success', data: savedVendor });
-    } catch (err) {
-        console.error('Error creating vendor:', err);
-        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while creating vendor' });
-    }
-};
-
-// Update a vendor
-exports.updateVendor = async (req, res) => {
-    const vendorId = req.params.id;
-    const { name, description, img } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(vendorId)) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Invalid vendor ID format' });
-    }
-
-    try {
-        const vendor = await Vendor.findById(vendorId);
-        if (!vendor) {
-            return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Vendor not found' });
-        }
-
-        const updatedVendor = await Vendor.findByIdAndUpdate(
-            vendorId,
-            { name, description, img },
-            { new: true, runValidators: true }
-        );
-        res.status(HTTP_STATUS.OK).json({ status: 'success', data: updatedVendor });
-    } catch (err) {
-        console.error('Error updating vendor:', err);
-        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while updating vendor' });
-    }
-};
-
-// Delete a vendor
-exports.deleteVendor = async (req, res) => {
-    const vendorId = req.params.id;
-
-    if (!mongoose.Types.ObjectId.isValid(vendorId)) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Invalid vendor ID format' });
-    }
-
-    try {
-        const vendor = await Vendor.findById(vendorId);
-        if (!vendor) {
-            return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Vendor not found' });
-        }
-
-        await Vendor.findByIdAndDelete(vendorId);
-        res.status(HTTP_STATUS.OK).json({ status: 'success', msg: 'Vendor deleted' });
-    } catch (err) {
-        console.error('Error deleting vendor:', err);
-        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while deleting vendor' });
     }
 };
