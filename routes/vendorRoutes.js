@@ -8,6 +8,7 @@ router.get('/', vendorController.getAllVendors);         // Get all vendors (pub
 router.get('/:id', vendorController.getVendorById);      // Get vendor by ID (public)
 
 // Protected routes for vendor bookings (require authentication)
+router.get('/bookings', authMiddleware, vendorController.getAllVendorBookings); // Get all vendor bookings for authenticated user
 router.post('/book', authMiddleware, vendorController.addVendorToCart); // Add vendor to cart (unconfirmed booking)
 router.put('/bookings/:id', authMiddleware, vendorController.updateVendorBooking); // Update vendor booking
 router.delete('/bookings/:id', authMiddleware, vendorController.deleteVendorBooking); // Delete vendor booking

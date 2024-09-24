@@ -9,7 +9,7 @@ const HTTP_STATUS = {
     BAD_REQUEST: 400,
     NOT_FOUND: 404,
     SERVER_ERROR: 500,
-    UNAUTHORIZED: 401
+    UNAUTHORIZED: 401,
 };
 
 // Helper functions for validation
@@ -77,7 +77,7 @@ exports.addVendorToCart = async (req, res) => {
             email,
             date,
             vendorName: vendor.name,
-            status: 'cart' // Initially set the status to cart
+            status: 'cart', // Initially set the status to cart
         });
 
         const savedVendorBooking = await newVendorBooking.save();
