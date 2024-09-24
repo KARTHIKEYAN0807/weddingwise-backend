@@ -37,7 +37,7 @@ exports.getEventById = async (req, res) => {
 // Book an event
 exports.bookEvent = async (req, res) => {
     try {
-        const { title, name, email, guests } = req.body; // Updated to use title directly
+        const { title, name, email, guests } = req.body; // Use title directly
 
         // Validate input
         if (!title || !name || !email || !guests) {
@@ -57,7 +57,7 @@ exports.bookEvent = async (req, res) => {
             name,
             email,
             guests,
-            eventTitle: event.title,
+            eventTitle: event.title, // Title from the event
         });
 
         const savedEventBooking = await newEventBooking.save();

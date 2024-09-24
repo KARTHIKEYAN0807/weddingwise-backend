@@ -13,7 +13,6 @@ const EventSchema = new mongoose.Schema({
         type: String 
     }, // Path to the event image
     // Add more fields as needed for event details
-    // For example, date, location, price, etc.
 });
 
 module.exports = mongoose.model('Event', EventSchema);
