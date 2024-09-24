@@ -2,16 +2,15 @@ require('dotenv').config(); // Ensure this is at the very top
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const morgan = require('morgan');
-const nodemailer = require('nodemailer');
+const helmet = require('helmet'); 
+const rateLimit = require('express-rate-limit'); 
+const morgan = require('morgan'); 
+const nodemailer = require('nodemailer'); // Import Nodemailer
 const userRoutes = require('./routes/userRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
-const authRoutes = require('./routes/authRoutes');
-const { body, validationResult } = require('express-validator');
+const authRoutes = require('./routes/authRoutes'); // Import the authRoutes
 
 const app = express();
 
@@ -34,37 +33,19 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Security middleware
-app.use(
-    helmet({
-        contentSecurityPolicy: {
-            useDefaults: true,
-            directives: {
-                'img-src': ["'self'", "data:", "https:"], // Allow images only from secure sources
-            },
-        },
-    })
-);
+app.use(helmet());
 
-// Rate limiting middleware (global)
+// Rate limiting middleware
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000, 
+    max: 100, 
     message: 'Too many requests from this IP, please try again after 15 minutes',
 });
 app.use(limiter);
 
 // CORS configuration
 const corsOptions = {
-    origin: (origin, callback) => {
-        const allowedOrigins = ['https://weddingwisebooking.netlify.app', 'http://localhost:5173'];
-        if (!origin) return callback(null, true); // Allow requests with no origin (like mobile apps or curl)
-        if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            console.warn(`CORS blocked for origin: ${origin}`); // Log blocked origins
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
     credentials: true,
@@ -93,54 +74,34 @@ app.use('/api/vendors', vendorRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/auth', authRoutes);
 
-// Rate limiting for the contact form
-const contactLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 5, // Limit each IP to 5 contact form requests per hour
-    message: 'Too many contact form submissions from this IP, please try again after an hour',
-});
-
 // Contact form route to handle sending emails
-app.post(
-    '/api/contact',
-    contactLimiter,
-    [
-        body('email').isEmail().withMessage('Please enter a valid email address'),
-        body('message').notEmpty().withMessage('Message field cannot be empty'),
-    ],
-    async (req, res) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
+app.post('/api/contact', async (req, res) => {
+    const { name, email, message } = req.body;
 
-        const { name, email, message } = req.body;
+    // Configure Nodemailer transporter
+    let transporter = nodemailer.createTransport({
+        service: 'gmail', // or any email provider
+        auth: {
+            user: process.env.EMAIL_USER, // your email
+            pass: process.env.EMAIL_PASS, // your email password
+        },
+    });
 
-        // Configure Nodemailer transporter
-        let transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-        });
+    let mailOptions = {
+        from: email, // sender address (user's email)
+        to: process.env.EMAIL_USER, // receiving address (your email)
+        subject: `Contact Form Submission from ${name}`,
+        text: `You have received a new message from your contact form:\n\nName: ${name}\nEmail: ${email}\nMessage:\n${message}`,
+    };
 
-        let mailOptions = {
-            from: email, // sender address (user's email)
-            to: process.env.EMAIL_USER, // receiving address (your email)
-            subject: `Contact Form Submission from ${name}`,
-            text: `You have received a new message from your contact form:\n\nName: ${name}\nEmail: ${email}\nMessage:\n${message}`,
-        };
-
-        try {
-            await transporter.sendMail(mailOptions);
-            res.status(200).send({ msg: 'Your message has been sent successfully!' });
-        } catch (error) {
-            console.error('Error sending contact form email:', error);
-            res.status(500).send({ msg: 'Failed to send message.' });
-        }
+    try {
+        await transporter.sendMail(mailOptions);
+        res.status(200).send({ msg: 'Your message has been sent successfully!' });
+    } catch (error) {
+        console.error('Error sending contact form email:', error);
+        res.status(500).send({ msg: 'Failed to send message.' });
     }
-);
+});
 
 // Default route
 app.get('/', (req, res) => {

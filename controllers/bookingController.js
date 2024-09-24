@@ -1,180 +1,100 @@
 const Booking = require('../models/Booking');
 const nodemailer = require('nodemailer');
-const Event = require('../models/Event');
-const Vendor = require('../models/Vendor');
-
-// Constants for HTTP status codes
-const HTTP_STATUS = {
-    OK: 200,
-    CREATED: 201,
-    BAD_REQUEST: 400,
-    NOT_FOUND: 404,
-    SERVER_ERROR: 500,
-    UNAUTHORIZED: 401,
-};
-
-// Email settings
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_SUBJECT = 'Booking Confirmation - WeddingWise';
+const mongoose = require('mongoose');
+const Event = require('../models/Event'); // Import Event model
 
 // Confirm booking
 async function confirmBooking(req, res) {
     try {
         const { bookedEvents, bookedVendors } = req.body;
-
-        // Ensure the user is authenticated
-        if (!req.user || !req.user.email) {
-            return res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false, message: 'User not authenticated' });
-        }
-
         const userEmail = req.user.email;
 
-        // Validate that there are events or vendors to book
-        if ((!bookedEvents || bookedEvents.length === 0) && (!bookedVendors || bookedVendors.length === 0)) {
-            return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'No events or vendors provided for booking.' });
-        }
+        // Save the events and vendors to the database if they haven't been saved yet
+        const savedEvents = await saveBookings(bookedEvents, 'Event');
+        const savedVendors = await saveBookings(bookedVendors, 'Vendor');
 
-        // Save the events and vendors to the database
-        const savedEvents = await saveBookings(bookedEvents || [], 'Event');
-        const savedVendors = await saveBookings(bookedVendors || [], 'Vendor');
-
-        // Generate email content
+        // Generate the HTML content for the email
         const htmlContent = generateEmailContent(savedEvents, savedVendors);
 
         // Send confirmation email
-        const transporter = nodemailer.createTransport({
+        let transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
-                user: EMAIL_USER,
+                user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS,
             },
         });
 
-        const mailOptions = {
-            from: EMAIL_USER,
+        let mailOptions = {
+            from: process.env.EMAIL_USER,
             to: userEmail,
-            subject: EMAIL_SUBJECT,
+            subject: 'Booking Confirmation - WeddingWise',
             html: htmlContent,
         };
 
-        // Try sending the email and respond with success
-        await transporter.sendMail(mailOptions).catch(err => {
-            console.error('Error sending email:', err);
-            return res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Error sending confirmation email' });
-        });
-
-        // Respond with success and the saved bookings
-        return res.status(HTTP_STATUS.OK).json({
-            success: true,
-            message: 'Booking confirmed and email sent.',
-            bookings: { savedEvents, savedVendors },
-        });
-
+        try {
+            await transporter.sendMail(mailOptions);
+            res.json({ msg: 'Booking confirmed and email sent', bookings: { savedEvents, savedVendors } });
+        } catch (emailError) {
+            console.error('Error sending confirmation email:', emailError);
+            res.status(500).json({ msg: 'Booking confirmed, but error sending confirmation email' });
+        }
     } catch (err) {
-        console.error('Error confirming booking:', err); // Log the error
-        return res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Server error', error: err.message });
+        console.error('Error confirming booking:', err);
+        res.status(500).json({ msg: 'Server error' });
     }
 }
 
-// Fetch bookings for the authenticated user
-async function getUserBookings(req, res) {
-    try {
-        if (!req.user || !req.user.email) {
-            return res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false, message: 'User not authenticated' });
-        }
-
-        const userEmail = req.user.email;
-        const userBookings = await Booking.find({ email: userEmail });
-
-        if (!userBookings || userBookings.length === 0) {
-            return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'No bookings found for the user' });
-        }
-
-        return res.status(HTTP_STATUS.OK).json({ success: true, bookings: userBookings });
-    } catch (err) {
-        console.error('Error fetching user bookings:', err); // Log the error
-        return res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Server error', error: err.message });
-    }
-}
-
-// Fetch booking by ID
-async function getBookingById(req, res) {
-    try {
-        const bookingId = req.params.id;
-
-        // Find the booking by its ID
-        const booking = await Booking.findById(bookingId);
-        if (!booking) {
-            return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'Booking not found' });
-        }
-
-        return res.status(HTTP_STATUS.OK).json({ success: true, booking });
-    } catch (err) {
-        console.error('Error fetching booking by ID:', err);
-        return res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Server error', error: err.message });
-    }
-}
-
-// Helper function to save bookings to the database
+// Helper function to save bookings to the database if not already saved
 async function saveBookings(bookings, bookingType) {
     const savedBookings = [];
-
     for (const booking of bookings) {
-        try {
-            let savedBooking;
-
-            if (!booking._id || booking._id.startsWith('local-')) {
-                // Handle new bookings
-                savedBooking = await handleNewBooking(booking, bookingType);
-            } else {
-                // Fetch existing bookings
-                savedBooking = await Booking.findById(booking._id);
-                if (!savedBooking) throw new Error(`Booking not found with ID: ${booking._id}`);
+        if (!booking._id || booking._id.startsWith('local-')) {
+            // Ensure required fields are provided
+            if (bookingType === 'Event') {
+                if (!booking.eventTitle) {
+                    booking.eventTitle = 'Untitled Event';
+                }
+                if (!booking.event) {
+                    // Fetch the event from the database if only ID is provided
+                    const eventDetails = await Event.findById(booking.event);
+                    if (!eventDetails) {
+                        throw new Error('Event not found');
+                    }
+                    booking.eventTitle = eventDetails.title;
+                    booking.img = eventDetails.img;
+                }
             }
 
-            savedBookings.push(savedBooking);
-        } catch (err) {
-            console.error('Error saving booking:', err); // Log the error
-            throw err;
+            try {
+                // Remove the temporary _id if it exists
+                if (booking._id && booking._id.startsWith('local-')) {
+                    delete booking._id;
+                }
+
+                const savedBooking = new Booking({ ...booking, bookingType });
+                await savedBooking.save();
+                savedBookings.push(savedBooking);
+            } catch (err) {
+                console.error('Error saving booking:', err);
+                throw err; // Re-throw error to be caught in the calling function
+            }
+        } else {
+            // Fetch the full data of existing bookings from the database
+            const existingBooking = await Booking.findById(booking._id);
+            savedBookings.push(existingBooking);
         }
     }
-
     return savedBookings;
 }
 
-// Helper function to handle new bookings
-async function handleNewBooking(booking, bookingType) {
-    if (bookingType === 'Event') {
-        if (!booking.eventName) booking.eventName = 'Untitled Event';
-        if (!booking.event) {
-            const eventDetails = await Event.findById(booking.event);
-            if (!eventDetails) throw new Error(`Event not found with ID: ${booking.event}`);
-            booking.eventName = eventDetails.name;
-            booking.img = eventDetails.img;
-        }
-    } else if (bookingType === 'Vendor') {
-        if (!booking.vendorName) booking.vendorName = 'Untitled Vendor';
-        if (!booking.vendor) {
-            const vendorDetails = await Vendor.findById(booking.vendor);
-            if (!vendorDetails) throw new Error(`Vendor not found with ID: ${booking.vendor}`);
-            booking.vendorName = vendorDetails.name;
-        }
-    }
-
-    if (booking._id && booking._id.startsWith('local-')) delete booking._id;
-
-    const newBooking = new Booking({ ...booking, bookingType });
-    await newBooking.save();
-    return newBooking;
-}
-
-// Helper function to generate email HTML content
+// Helper function to generate email HTML content without a logo
 function generateEmailContent(bookedEvents, bookedVendors) {
     const eventItemsHtml = bookedEvents.map(event => `
         <div style="margin-bottom: 10px;">
-            <h3>${encodeHTML(event.eventName)}</h3>
+            <h3>${encodeHTML(event.eventTitle)}</h3>
             <p>Guests: ${event.guests || 'Not specified'}</p>
-            ${event.img ? `<img src="${event.img}" alt="${encodeHTML(event.eventName)}" style="max-width: 100%;">` : ''}
+            ${event.img ? `<img src="${event.img}" alt="${encodeHTML(event.eventTitle)}" style="max-width: 100%;">` : ''}
         </div>
     `).join('');
 
@@ -215,4 +135,4 @@ function encodeHTML(str) {
     return str ? str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;') : '';
 }
 
-module.exports = { confirmBooking, getUserBookings, getBookingById };
+module.exports = { confirmBooking };

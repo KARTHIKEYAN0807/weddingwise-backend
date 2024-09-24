@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const bookingSchema = new mongoose.Schema({
+const BookingSchema = new mongoose.Schema({
     bookingType: {
         type: String,
         enum: ['Event', 'Vendor'],
@@ -16,11 +16,6 @@ const bookingSchema = new mongoose.Schema({
         ref: 'Vendor',
         required: function() { return this.bookingType === 'Vendor'; }
     },
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
-    },
     name: {
         type: String,
         required: true,
@@ -28,33 +23,31 @@ const bookingSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
-        validate: {
-            validator: function(v) {
-                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-            },
-            message: props => `${props.value} is not a valid email!`
-        }
     },
     guests: {
         type: Number,
         required: function() { return this.bookingType === 'Event'; },
-        min: [1, 'Guests must be at least 1']
+    },
+    eventTitle: {
+        type: String,
+        default: 'Untitled Event',
+    },
+    vendorName: {
+        type: String,
+        required: function() { return this.bookingType === 'Vendor'; },
     },
     date: {
         type: Date,
-        required: true,
-        validate: {
-            validator: function(v) {
-                return v >= new Date();  // Ensure the date is in the future
-            },
-            message: props => `The date ${props.value} cannot be in the past!`
-        }
+        required: function() { return this.bookingType === 'Vendor'; },
     },
 }, { timestamps: true });
 
-// Optionally add indexes to optimize query performance
-bookingSchema.index({ userId: 1 });
-bookingSchema.index({ event: 1 });
-bookingSchema.index({ vendor: 1 });
+// Pre-save hook to ensure default values and validation
+BookingSchema.pre('save', function(next) {
+    if (this.bookingType === 'Event' && !this.eventTitle) {
+        this.eventTitle = 'Untitled Event';
+    }
+    next();
+});
 
-module.exports = mongoose.model('Booking', bookingSchema);
+module.exports = mongoose.model('Booking', BookingSchema);
