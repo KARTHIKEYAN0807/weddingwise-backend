@@ -47,12 +47,11 @@ exports.getVendorById = async (req, res) => {
     }
 };
 
-// Get all vendor bookings for authenticated user (Missing function)
+// Get all vendor bookings for authenticated user
 exports.getAllVendorBookings = async (req, res) => {
     try {
-        const userId = req.user.id;  // Assuming you have the user ID from the authentication middleware
+        const userId = req.user.id;  // Assuming user ID from auth middleware
         const bookings = await Booking.find({ userId, bookingType: 'Vendor' }).populate('vendor');
-        
         res.status(HTTP_STATUS.OK).json({ status: 'success', data: bookings });
     } catch (err) {
         console.error('Error fetching vendor bookings:', err);
@@ -116,10 +115,8 @@ exports.confirmVendorBooking = async (req, res) => {
             return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Cart booking not found' });
         }
 
-        // Update the booking status to confirmed
         vendorBooking.status = 'confirmed';
         const confirmedBooking = await vendorBooking.save();
-
         res.status(HTTP_STATUS.OK).json({ status: 'success', data: confirmedBooking });
     } catch (err) {
         console.error('Error confirming vendor booking:', err);
