@@ -52,7 +52,7 @@ async function saveBookings(bookings, bookingType) {
         if (!booking._id || booking._id.startsWith('local-')) {
             // Ensure required fields are provided
             if (bookingType === 'Event') {
-                if (!booking.title) { // Use 'title' instead of 'eventTitle'
+                if (!booking.title) {
                     booking.title = 'Untitled Event';
                 }
                 if (!booking.event) {
@@ -61,7 +61,7 @@ async function saveBookings(bookings, bookingType) {
                     if (!eventDetails) {
                         throw new Error('Event not found');
                     }
-                    booking.title = eventDetails.title; // Use 'title' from the database
+                    booking.title = eventDetails.title;
                     booking.img = eventDetails.img;
                 }
             }
@@ -88,22 +88,26 @@ async function saveBookings(bookings, bookingType) {
     return savedBookings;
 }
 
-// Helper function to generate email HTML content without a logo
+// Helper function to generate email HTML content with error handling
 function generateEmailContent(bookedEvents, bookedVendors) {
-    const eventItemsHtml = bookedEvents.map(event => `
-        <div style="margin-bottom: 10px;">
-            <h3>${encodeHTML(event.title)}</h3> <!-- Use 'title' -->
-            <p>Guests: ${event.guests || 'Not specified'}</p>
-            ${event.img ? `<img src="${event.img}" alt="${encodeHTML(event.title)}" style="max-width: 100%;">` : ''}
-        </div>
-    `).join('');
+    const eventItemsHtml = bookedEvents
+        .filter(event => event && event.title) // Filter out any null/undefined or missing title events
+        .map(event => `
+            <div style="margin-bottom: 10px;">
+                <h3>${encodeHTML(event.title)}</h3>
+                <p>Guests: ${event.guests || 'Not specified'}</p>
+                ${event.img ? `<img src="${event.img}" alt="${encodeHTML(event.title)}" style="max-width: 100%;">` : ''}
+            </div>
+        `).join('');
 
-    const vendorItemsHtml = bookedVendors.map(vendor => `
-        <div style="margin-bottom: 10px;">
-            <h3>${encodeHTML(vendor.vendorName)}</h3>
-            <p>Date: ${vendor.date ? new Date(vendor.date).toLocaleDateString() : 'No date provided.'}</p>
-        </div>
-    `).join('');
+    const vendorItemsHtml = bookedVendors
+        .filter(vendor => vendor && vendor.vendorName) // Ensure valid vendor data
+        .map(vendor => `
+            <div style="margin-bottom: 10px;">
+                <h3>${encodeHTML(vendor.vendorName)}</h3>
+                <p>Date: ${vendor.date ? new Date(vendor.date).toLocaleDateString() : 'No date provided.'}</p>
+            </div>
+        `).join('');
 
     return `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px;">
