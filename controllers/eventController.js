@@ -1,4 +1,3 @@
-// controllers/eventController.js
 const mongoose = require('mongoose');
 const Event = require('../models/Event');
 const Booking = require('../models/Booking');
@@ -38,15 +37,15 @@ exports.getEventById = async (req, res) => {
 // Book an event
 exports.bookEvent = async (req, res) => {
     try {
-        const { eventTitle, name, email, guests } = req.body;
+        const { title, name, email, guests } = req.body; // Updated to use title directly
 
         // Validate input
-        if (!eventTitle || !name || !email || !guests) {
-            return res.status(400).json({ msg: 'Please provide all required fields: eventTitle, name, email, and guests.' });
+        if (!title || !name || !email || !guests) {
+            return res.status(400).json({ msg: 'Please provide all required fields: title, name, email, and guests.' });
         }
 
-        // Find the event by title (assuming eventTitle is a unique identifier)
-        const event = await Event.findOne({ title: eventTitle });
+        // Find the event by title
+        const event = await Event.findOne({ title });
         if (!event) {
             return res.status(404).json({ msg: 'Event not found' });
         }
