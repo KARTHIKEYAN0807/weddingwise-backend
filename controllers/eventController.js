@@ -47,8 +47,8 @@ exports.getEventById = async (req, res) => {
     }
 };
 
-// Book an event
-exports.bookEvent = async (req, res) => {
+// Add event to cart (not confirmed yet)
+exports.addEventToCart = async (req, res) => {
     const { eventName, name, email, date, guests } = req.body;
     const userId = req.user ? req.user._id : null;
 
@@ -74,7 +74,7 @@ exports.bookEvent = async (req, res) => {
             return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Event not found' });
         }
 
-        const newEventBooking = new Booking({
+        const newCartBooking = new Booking({
             bookingType: 'Event',
             event: event._id,
             userId,
@@ -83,13 +83,40 @@ exports.bookEvent = async (req, res) => {
             date,
             guests,
             eventName: event.name,
+            status: 'cart' // Initially add to cart
         });
 
-        const savedEventBooking = await newEventBooking.save();
-        res.status(HTTP_STATUS.CREATED).json({ status: 'success', data: savedEventBooking });
+        const savedCartBooking = await newCartBooking.save();
+        res.status(HTTP_STATUS.CREATED).json({ status: 'success', data: savedCartBooking });
     } catch (err) {
-        console.error('Error booking event:', err);
-        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while booking event' });
+        console.error('Error adding event to cart:', err);
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while adding event to cart' });
+    }
+};
+
+// Confirm event booking (finalize booking from cart)
+exports.confirmEventBooking = async (req, res) => {
+    const eventBookingId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(eventBookingId)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Invalid event booking ID format' });
+    }
+
+    try {
+        const eventBooking = await Booking.findById(eventBookingId);
+
+        if (!eventBooking || eventBooking.status !== 'cart') {
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Cart booking not found' });
+        }
+
+        // Update the booking status to confirmed
+        eventBooking.status = 'confirmed';
+        const confirmedBooking = await eventBooking.save();
+
+        res.status(HTTP_STATUS.OK).json({ status: 'success', data: confirmedBooking });
+    } catch (err) {
+        console.error('Error confirming event booking:', err);
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while confirming event booking' });
     }
 };
 

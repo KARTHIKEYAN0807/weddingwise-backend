@@ -57,11 +57,13 @@ async function confirmBooking(req, res) {
             html: htmlContent,
         };
 
+        // Try sending the email and respond with success
         await transporter.sendMail(mailOptions).catch(err => {
             console.error('Error sending email:', err);
             return res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: 'Error sending confirmation email' });
         });
 
+        // Respond with success and the saved bookings
         return res.status(HTTP_STATUS.OK).json({
             success: true,
             message: 'Booking confirmed and email sent.',

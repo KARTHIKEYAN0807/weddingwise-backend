@@ -17,9 +17,9 @@ const VendorSchema = new mongoose.Schema({
     default: '/images/default-vendor.jpg',
     validate: {
       validator: function(v) {
-        return /\.(jpg|jpeg|png|gif)$/.test(v);  // Ensures the image file has a valid format
+        return /^(http|https):\/\/.*\.(jpg|jpeg|png|gif)$/.test(v);  // Ensures the URL is valid and has a valid image format
       },
-      message: props => `${props.value} is not a valid image format.`
+      message: props => `${props.value} is not a valid image URL or format.`
     }
   },
   bookings: [

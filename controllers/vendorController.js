@@ -47,12 +47,11 @@ exports.getVendorById = async (req, res) => {
     }
 };
 
-// Book a vendor
-exports.bookVendor = async (req, res) => {
+// Add vendor to cart (unconfirmed booking)
+exports.addVendorToCart = async (req, res) => {
     const { vendorName, name, email, date, userId } = req.body;
 
     if (!vendorName || !name || !email || !date || !userId) {
-        console.error('Missing required fields:', req.body);
         return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'All fields are required: vendorName, name, email, date, and userId.' });
     }
 
@@ -78,13 +77,40 @@ exports.bookVendor = async (req, res) => {
             email,
             date,
             vendorName: vendor.name,
+            status: 'cart' // Initially set the status to cart
         });
 
         const savedVendorBooking = await newVendorBooking.save();
         res.status(HTTP_STATUS.CREATED).json({ status: 'success', data: savedVendorBooking });
     } catch (err) {
-        console.error('Error booking vendor:', err);
-        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while booking vendor' });
+        console.error('Error adding vendor to cart:', err);
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while adding vendor to cart' });
+    }
+};
+
+// Confirm vendor booking (finalize booking from cart)
+exports.confirmVendorBooking = async (req, res) => {
+    const vendorBookingId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(vendorBookingId)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Invalid vendor booking ID format' });
+    }
+
+    try {
+        const vendorBooking = await Booking.findById(vendorBookingId);
+
+        if (!vendorBooking || vendorBooking.status !== 'cart') {
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Cart booking not found' });
+        }
+
+        // Update the booking status to confirmed
+        vendorBooking.status = 'confirmed';
+        const confirmedBooking = await vendorBooking.save();
+
+        res.status(HTTP_STATUS.OK).json({ status: 'success', data: confirmedBooking });
+    } catch (err) {
+        console.error('Error confirming vendor booking:', err);
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while confirming vendor booking' });
     }
 };
 

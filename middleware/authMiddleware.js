@@ -38,6 +38,8 @@ module.exports = function (req, res, next) {
             errorMessage = 'Token has expired, please log in again';
         } else if (err.name === 'JsonWebTokenError') {
             errorMessage = 'Invalid token, authorization denied';
+        } else if (err.name === 'NotBeforeError') {
+            errorMessage = 'Token is not active yet';
         }
 
         // Respond with a 401 Unauthorized status and a specific error message
