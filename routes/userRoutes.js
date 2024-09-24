@@ -22,10 +22,9 @@ const formatValidationErrors = (errors) => {
 router.post('/register', [
     check('name', 'Name is required').not().isEmpty().trim(),
     check('email', 'Please include a valid email').isEmail().normalizeEmail(),
-    check('password', 'Password must be at least 6 characters long and contain at least one number and one special character')
+    check('password', 'Password must be at least 6 characters long, contain at least one number and one special character')
         .isLength({ min: 6 })
-        .matches(/\d/)
-        .matches(/[!@#$%^&*(),.?":{}|<>]/) // Optional: check for special characters
+        .matches(/^(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).*$/), // Combined regex check
 ], (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -60,7 +59,9 @@ router.post('/send-reset-password-email', [
 // Reset password with validation
 router.post('/reset-password', [
     check('token', 'Token is required').exists(),
-    check('newPassword', 'Password must be at least 6 characters long').isLength({ min: 6 }),
+    check('newPassword', 'Password must be at least 6 characters long, contain at least one number and one special character')
+        .isLength({ min: 6 })
+        .matches(/^(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).*$/), // Ensure password has number and special character
 ], (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

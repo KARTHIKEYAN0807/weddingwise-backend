@@ -5,12 +5,12 @@ const cors = require('cors');
 const helmet = require('helmet'); 
 const rateLimit = require('express-rate-limit'); 
 const morgan = require('morgan'); 
-const nodemailer = require('nodemailer'); // Import Nodemailer
+const nodemailer = require('nodemailer');
 const userRoutes = require('./routes/userRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
-const authRoutes = require('./routes/authRoutes'); // Import the authRoutes
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
@@ -19,16 +19,15 @@ const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'EMAIL_USER', 'EMAIL_PASS'
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
 
 if (missingEnvVars.length) {
-    console.error(`Missing required environment variables: ${missingEnvVars.join(', ')}. Please check your .env file.`);
+    console.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
     process.exit(1);
 }
 
-// Log environment variables for debugging in development mode
+// Log environment variables in development mode
 if (process.env.NODE_ENV === 'development') {
     console.log('MONGODB_URI:', process.env.MONGODB_URI);
     console.log('JWT_SECRET:', process.env.JWT_SECRET ? '*****' : 'Not set');
     console.log('EMAIL_USER:', process.env.EMAIL_USER);
-    console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '*****' : 'Not set');
     console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
 }
 
@@ -45,7 +44,7 @@ app.use(limiter);
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL || 'https://weddingwisebooking.netlify.app', // Update here
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
     credentials: true,

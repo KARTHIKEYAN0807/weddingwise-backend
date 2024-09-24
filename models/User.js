@@ -30,7 +30,6 @@ const UserSchema = new mongoose.Schema({
 
 // Password hashing before saving the user document
 UserSchema.pre('save', async function (next) {
-    // Check if password is modified to avoid re-hashing
     if (!this.isModified('password')) {
         return next();
     }
