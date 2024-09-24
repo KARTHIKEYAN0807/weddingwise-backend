@@ -52,8 +52,8 @@ async function saveBookings(bookings, bookingType) {
         if (!booking._id || booking._id.startsWith('local-')) {
             // Ensure required fields are provided
             if (bookingType === 'Event') {
-                if (!booking.eventTitle) {
-                    booking.eventTitle = 'Untitled Event';
+                if (!booking.title) { // Use 'title' instead of 'eventTitle'
+                    booking.title = 'Untitled Event';
                 }
                 if (!booking.event) {
                     // Fetch the event from the database if only ID is provided
@@ -61,7 +61,7 @@ async function saveBookings(bookings, bookingType) {
                     if (!eventDetails) {
                         throw new Error('Event not found');
                     }
-                    booking.eventTitle = eventDetails.title;
+                    booking.title = eventDetails.title; // Use 'title' from the database
                     booking.img = eventDetails.img;
                 }
             }
@@ -92,9 +92,9 @@ async function saveBookings(bookings, bookingType) {
 function generateEmailContent(bookedEvents, bookedVendors) {
     const eventItemsHtml = bookedEvents.map(event => `
         <div style="margin-bottom: 10px;">
-            <h3>${encodeHTML(event.eventTitle)}</h3>
+            <h3>${encodeHTML(event.title)}</h3> <!-- Use 'title' -->
             <p>Guests: ${event.guests || 'Not specified'}</p>
-            ${event.img ? `<img src="${event.img}" alt="${encodeHTML(event.eventTitle)}" style="max-width: 100%;">` : ''}
+            ${event.img ? `<img src="${event.img}" alt="${encodeHTML(event.title)}" style="max-width: 100%;">` : ''}
         </div>
     `).join('');
 
