@@ -28,7 +28,7 @@ const BookingSchema = new mongoose.Schema({
         type: Number,
         required: function() { return this.bookingType === 'Event'; },
     },
-    eventTitle: {
+    title: {
         type: String,
         default: 'Untitled Event',
     },
@@ -44,8 +44,8 @@ const BookingSchema = new mongoose.Schema({
 
 // Pre-save hook to ensure default values and validation
 BookingSchema.pre('save', function(next) {
-    if (this.bookingType === 'Event' && !this.eventTitle) {
-        this.eventTitle = 'Untitled Event';
+    if (this.bookingType === 'Event' && !this.title) {
+        this.title = 'Untitled Event';
     }
     next();
 });

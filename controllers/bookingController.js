@@ -88,7 +88,7 @@ async function saveBookings(bookings, bookingType) {
     return savedBookings;
 }
 
-// Helper function to generate email HTML content with error handling
+// Helper function to generate email HTML content
 function generateEmailContent(bookedEvents, bookedVendors) {
     const eventItemsHtml = bookedEvents
         .filter(event => event && event.title) // Filter out any null/undefined or missing title events
