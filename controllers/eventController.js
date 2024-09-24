@@ -9,18 +9,41 @@ const HTTP_STATUS = {
     BAD_REQUEST: 400,
     NOT_FOUND: 404,
     SERVER_ERROR: 500,
-    UNAUTHORIZED: 401,
+    UNAUTHORIZED: 401
 };
 
-// Get all event bookings for authenticated user
-exports.getAllEventBookings = async (req, res) => {
+// Helper functions for validation
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isValidFutureDate = (date) => !isNaN(Date.parse(date)) && new Date(date) > new Date();
+
+// Get all events
+exports.getAllEvents = async (req, res) => {
     try {
-        const userId = req.user.id;  // Assuming user ID from auth middleware
-        const bookings = await Booking.find({ userId, bookingType: 'Event' }).populate('event');
-        res.status(HTTP_STATUS.OK).json({ status: 'success', data: bookings });
+        const events = await Event.find();
+        res.status(HTTP_STATUS.OK).json({ status: 'success', data: events });
     } catch (err) {
-        console.error('Error fetching event bookings:', err);
-        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while fetching event bookings' });
+        console.error('Error fetching events:', err);
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while fetching events' });
+    }
+};
+
+// Get a single event by ID
+exports.getEventById = async (req, res) => {
+    const eventId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Invalid event ID format' });
+    }
+
+    try {
+        const event = await Event.findById(eventId);
+        if (!event) {
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Event not found' });
+        }
+        res.status(HTTP_STATUS.OK).json({ status: 'success', data: event });
+    } catch (err) {
+        console.error('Error fetching event by ID:', err);
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while fetching event' });
     }
 };
 
@@ -86,8 +109,10 @@ exports.confirmEventBooking = async (req, res) => {
             return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Cart booking not found' });
         }
 
+        // Update the booking status to confirmed
         eventBooking.status = 'confirmed';
         const confirmedBooking = await eventBooking.save();
+
         res.status(HTTP_STATUS.OK).json({ status: 'success', data: confirmedBooking });
     } catch (err) {
         console.error('Error confirming event booking:', err);
@@ -153,5 +178,76 @@ exports.deleteEventBooking = async (req, res) => {
     } catch (err) {
         console.error('Error deleting event booking:', err);
         res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while deleting event booking' });
+    }
+};
+
+// Create a new event
+exports.createEvent = async (req, res) => {
+    const { name, description, img } = req.body;
+
+    if (!name || !description || !img) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Event name, description, and image are required' });
+    }
+
+    try {
+        const newEvent = new Event({ name, description, img });
+        const savedEvent = await newEvent.save();
+        res.status(HTTP_STATUS.CREATED).json({ status: 'success', data: savedEvent });
+    } catch (err) {
+        console.error('Error creating event:', err);
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while creating event' });
+    }
+};
+
+// Update an event
+exports.updateEvent = async (req, res) => {
+    const eventId = req.params.id;
+    const { name, description, img } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Invalid event ID format' });
+    }
+
+    if (!name || !description || !img) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Event name, description, and image are required' });
+    }
+
+    try {
+        const updatedEvent = await Event.findByIdAndUpdate(
+            eventId,
+            { name, description, img },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedEvent) {
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Event not found' });
+        }
+
+        res.status(HTTP_STATUS.OK).json({ status: 'success', data: updatedEvent });
+    } catch (err) {
+        console.error('Error updating event:', err);
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while updating event' });
+    }
+};
+
+// Delete an event
+exports.deleteEvent = async (req, res) => {
+    const eventId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(eventId)) {
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ status: 'error', msg: 'Invalid event ID format' });
+    }
+
+    try {
+        const event = await Event.findById(eventId);
+        if (!event) {
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ status: 'error', msg: 'Event not found' });
+        }
+
+        await Event.findByIdAndDelete(eventId);
+        res.status(HTTP_STATUS.OK).json({ status: 'success', msg: 'Event deleted' });
+    } catch (err) {
+        console.error('Error deleting event:', err);
+        res.status(HTTP_STATUS.SERVER_ERROR).json({ status: 'error', msg: 'Server error while deleting event' });
     }
 };
